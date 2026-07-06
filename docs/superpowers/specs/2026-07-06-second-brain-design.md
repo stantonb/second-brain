@@ -41,7 +41,8 @@ second-brain/
     evening-shutdown/SKILL.md
     weekly-review/SKILL.md
   scripts/
-    discord.sh                   # send DM, fetch unprocessed capture messages, add ✅ reactions
+    discord.sh                   # send DM, fetch capture messages (paginated), add ✅ reactions
+    check-env.sh                 # validate env vars + Discord/GitHub/Notion connectivity
   docs/
     setup.md                     # runbook: bot creation, tokens, connectors, routine config
     superpowers/specs/           # this spec
@@ -65,7 +66,7 @@ second-brain/
 | Gmail/Calendar (personal) | claude.ai Google connectors | |
 | Gmail/Calendar (work) | claude.ai Google connectors **if** Simply Business IT allows | Fallback: share work calendar into personal calendar; work email drops to roadmap |
 | Discord | Bot token + REST via `curl` (`scripts/discord.sh`) | No hosted MCP dependency |
-| GitHub | `gh` CLI with `GH_TOKEN` | PR status across repos |
+| GitHub | `gh` CLI with `GH_TOKEN` | Fine-grained PAT + explicit repo allowlist in CLAUDE.md |
 
 ### Cloud environment
 
@@ -102,13 +103,25 @@ Created alongside (not inside) the existing structure:
 
 - **Tasks** (database) — the rolling to-do list.
   - Name (title), Status (`Inbox / Next / In progress / Waiting / Done / Dropped`),
-    Domain (`Work / Personal`), Due (date), Priority (`High / Medium / Low`),
-    Created (created time), Completed (date), Waiting-on (text: person),
-    Source (text: Discord message ID, email link, or `manual`).
-  - The rolling list = view of `Next + In progress + Waiting`.
-- **Journal** (database) — one page per run: Date, Type (`Morning / Evening / Weekly`),
-  body = full text of what was sent. Memory for rollover honesty, the weekly self-check,
-  and future pattern analysis.
+    Domain (`Work / Personal`), Project/Area (select), Due (date),
+    Priority (`High / Medium / Low`), Created (created time), Completed (date),
+    Waiting-on (text: person), Blocked Reason (text, used with `Waiting`),
+    Snoozed Until (date — hidden from briefings until then),
+    Pinned (checkbox — exempt from aging flags and cull proposals),
+    Rollover Count (number), Last Rolled Over (date), Last Touched (date),
+    Source (text: human-readable origin), Source ID (text: unique dedupe key —
+    Discord message ID, Gmail message ID, GitHub PR URL, or `manual`).
+  - The rolling list = view of `Next + In progress + Waiting`, excluding snoozed.
+  - Rollover state lives in these properties, updated by the evening run — never
+    parsed back out of Journal prose.
+- **Journal** (database) — one page per run, titled by run ID (see Run conventions):
+  Date, Type (`Morning / Evening / Weekly`), body = full text of what was sent. Memory
+  for the weekly self-check and future pattern analysis.
+- **Capture Log** (database) — the authoritative record of capture processing, one row
+  per Discord message: Message ID (dedupe key), Raw Text, Processed At, Outcome
+  (`Task created / Reading list / Note / Status update / Needs Review / Skipped`),
+  Confidence, and a link to the created/updated Task or Journal page. Gives dedupe,
+  audit, and retry safety independent of Discord reaction state.
 - **Reading list** (database) — Name, URL, Status (`Unread / Read`), Added.
 - **Brag doc** (page) — appended by the weekly review, grouped by month.
 
@@ -116,6 +129,7 @@ Created alongside (not inside) the existing structure:
 
 - Task in `Next`/`In progress` for **>14 days** → flagged in briefings with its age.
 - **>30 days** → weekly review proposes moving it to `Dropped` (user confirms via capture reply).
+- **Pinned** tasks are exempt from both; **snoozed** tasks don't age until they wake.
 
 ## Discord design
 
@@ -127,18 +141,38 @@ Created alongside (not inside) the existing structure:
 
 ### Capture protocol
 
-- Each run fetches recent `#capture` messages and processes only those **without a ✅
-  reaction from the bot**; it adds ✅ after processing. No timestamp bookkeeping; the user
-  can see ingestion state at a glance.
+- Each run pages through `#capture` history with the `after` cursor (100 messages/page)
+  until fully caught up — never a "recent messages" window that could miss older items
+  if volume spikes.
+- The **Capture Log is the source of truth** for what's been processed (dedupe by message
+  ID). The ✅ reaction is a UX marker only, added after the Capture Log row is written —
+  so a retry after partial failure can't double-process.
+- Discord API calls honor rate limits (429 + `Retry-After`, exponential backoff) and
+  DM sends split at the 2000-character limit.
 - Triage intent rules (in CLAUDE.md):
   - URL → Reading list.
-  - `done: <text>` / `drop: <text>` → fuzzy-match an existing Task, update Status.
+  - `done: <text>` / `drop: <text>` → fuzzy-match an existing Task and update Status —
+    **only above a confidence threshold**. Ambiguous matches become a `Needs Review`
+    Capture Log row surfaced in the next DM's decisions-needed section; never guess.
+  - `snooze: <task> until <date>` → set Snoozed Until.
+  - `waiting: <person> <thing>` → Task with Status `Waiting` + Waiting-on.
+  - `note: <text>` → forced journal note (skips task inference).
   - Anything actionable → Task (infer Domain, Due, Priority; default Status `Inbox`,
     promoted to `Next` if clearly actionable).
   - Otherwise → appended as a note to today's Journal page.
 - Every processed capture is confirmed in the next briefing/shutdown ("Captured: 3 tasks, 1 link").
 
 ## Run behavior
+
+### Run conventions
+
+- **Timezone**: all date queries, Journal titles, and "today/tomorrow" logic resolve in
+  **Europe/London** explicitly (cloud runs default to UTC — never rely on system time).
+- **Run ID**: `{type}-{YYYY-MM-DD}` (e.g. `morning-2026-07-06`); manual reruns append a
+  suffix note but target the same Journal page.
+- **Idempotency**: before writing, each run checks for an existing Journal page with its
+  run ID and updates it rather than duplicating; captures are already idempotent via the
+  Capture Log. A manual rerun therefore never double-creates tasks or Journal entries.
 
 ### Morning briefing (06:45)
 
@@ -147,23 +181,30 @@ Created alongside (not inside) the existing structure:
 3. Tasks: pick **top 3** (due date, priority, aging), then the rest of the rolling list one line each.
 4. Email: messages needing replies; deadlines spotted; **waiting-on** = sent mail from the
    last 7 days with no reply.
-5. GitHub: PRs awaiting my review; my open PRs' status; CI failures overnight.
-6. Aging flags (>14 days).
-7. Compose in the CLAUDE.md format → DM → save full text to Journal.
+5. GitHub: PRs awaiting my review; my open PRs' status; CI failures overnight — across
+   an explicit **repo allowlist in CLAUDE.md** (and a fine-grained PAT scoped to match),
+   not everything the token can see.
+6. Aging flags (>14 days, unpinned only).
+7. **Decisions needed**: `Needs Review` Capture Log rows and anything else awaiting a call.
+8. Compose in the CLAUDE.md format → DM → save full text to Journal.
 
 ### Evening shutdown (21:00)
 
-1. Triage captures, including `done:`/`drop:` updates.
-2. Reconcile: Tasks completed today (Notion status changes + capture messages).
-3. **Honest rollover**: incomplete due-today items listed with rollover count
-   ("X rolled over, 4th time") — computed from Journal history.
-4. Tomorrow preview: first meeting, day shape.
-5. DM → Journal.
+1. Triage captures, including `done:`/`drop:`/`snooze:`/`waiting:` updates.
+2. Reconcile: Tasks completed today (Notion status changes + capture messages);
+   set Last Touched.
+3. **Honest rollover**: incomplete due-today items get Rollover Count incremented and
+   Last Rolled Over set, then listed with their count ("X rolled over, 4th time") —
+   read from Task properties, never parsed from Journal prose.
+4. **Decisions needed**: unresolved `Needs Review` items carried forward.
+5. Tomorrow preview: first meeting, day shape.
+6. DM → Journal.
 
 ### Weekly review (Sunday 17:00)
 
 1. Read the week's Journal pages + Tasks activity + recently updated `CSD EL` sub-pages.
-2. Compose: wins, dropped balls, stale-task cull proposals (>30 days), next week's shape.
+2. Compose: wins, dropped balls, stale-task cull proposals (>30 days, unpinned),
+   next week's shape.
 3. Append work wins to the Brag doc (month section).
 4. **Self-check**: scan Journal for the expected 14 daily entries; report any gaps
    (a silent-failure detector, since a green run status only means the session ran).
@@ -181,8 +222,12 @@ Created alongside (not inside) the existing structure:
 
 ## Testing & rollout
 
+- `scripts/check-env.sh` validates required env vars and live connectivity (Discord auth,
+  `gh auth status`, Notion connector reachable) — run before enabling each routine.
 - Each skill is runnable locally in interactive Claude Code; a dry-run convention posts to
-  `#test` (`DISCORD_TEST_CHANNEL_ID`) instead of DM.
+  `#test` (`DISCORD_TEST_CHANNEL_ID`) instead of DM, and a **fixture mode** feeds canned
+  Discord/Notion/GitHub data so triage and composition logic can be exercised without
+  touching live services.
 - **Setup step zero**: test whether the work Google account can connect to claude.ai
   connectors. If blocked, apply the calendar-sharing fallback and move work-email triage
   to the roadmap.
