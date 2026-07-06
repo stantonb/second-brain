@@ -1,0 +1,39 @@
+#!/usr/bin/env bats
+load test_helper
+
+setup()    { setup_discord; }
+teardown() { teardown_discord; }
+
+@test "send_channel splits long input into one POST per chunk" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{}' > "$CURL_STUB_DIR/1.body"
+  echo 200 > "$CURL_STUB_DIR/2.code"; printf '{}' > "$CURL_STUB_DIR/2.body"
+  line=$(head -c 1500 </dev/zero | tr '\0' 'a')
+  printf '%s\n%s' "$line" "$line" | send_channel 555
+  [ "$(cat "$CURL_STUB_DIR/count")" = "2" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.content | length')" = "1500" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/channels/555/messages')" = "1" ]
+}
+
+@test "send_dm opens the DM channel then posts to it" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{"id":"999000"}' > "$CURL_STUB_DIR/1.body"
+  echo 200 > "$CURL_STUB_DIR/2.code"; printf '{}' > "$CURL_STUB_DIR/2.body"
+  export DISCORD_USER_ID='111111111111111111'
+  printf 'good morning' | send_dm
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/users/@me/channels')" = "1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.recipient_id')" = "111111111111111111" ]
+  [ "$(sed -n '2p' "$CURL_STUB_DIR/calls.log" | grep -c '/channels/999000/messages')" = "1" ]
+  [ "$(sed -n '2p' "$CURL_STUB_DIR/payloads.log" | jq -r '.content')" = "good morning" ]
+}
+
+@test "react PUTs the URL-encoded ✅" {
+  echo 204 > "$CURL_STUB_DIR/1.code"; : > "$CURL_STUB_DIR/1.body"
+  run react 555 1001
+  [ "$status" -eq 0 ]
+  [ "$(grep -c '%E2%9C%85' "$CURL_STUB_DIR/calls.log")" = "1" ]
+}
+
+@test "CLI: unknown command prints usage and exits 2" {
+  run bash scripts/discord.sh bogus
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"usage:"* ]]
+}

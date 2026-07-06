@@ -114,6 +114,57 @@ fetch_captures() {
   printf '%s\n' "$combined"
 }
 
+# send_channel CHANNEL_ID — stdin → one or more POSTs (2000-char chunks).
+send_channel() {
+  local channel_id=$1 dir f payload
+  dir=$(mktemp -d)
+  split_message "$dir"
+  for f in "$dir"/chunk-*; do
+    [[ -e $f ]] || { echo 'send_channel: empty message — nothing sent' >&2; break; }
+    payload=$(jq -c -Rs '{content: .}' "$f")
+    discord_api POST "/channels/$channel_id/messages" "$payload" > /dev/null || { rm -rf "$dir"; return 1; }
+  done
+  rm -rf "$dir"
+}
+
+# send_dm — stdin → DM to $DISCORD_USER_ID (opens/reuses the DM channel).
+send_dm() {
+  local dm_channel
+  dm_channel=$(discord_api POST '/users/@me/channels' \
+    "{\"recipient_id\":\"$DISCORD_USER_ID\"}" | jq -r '.id')
+  send_channel "$dm_channel"
+}
+
+# react CHANNEL_ID MESSAGE_ID [EMOJI] — default ✅. Empty body → Content-Length: 0.
+react() {
+  local channel_id=$1 message_id=$2 emoji=${3:-✅} encoded
+  encoded=$(jq -rn --arg e "$emoji" '$e | @uri')
+  discord_api PUT "/channels/$channel_id/messages/$message_id/reactions/$encoded/@me" '' > /dev/null
+}
+
+usage() {
+  cat >&2 <<'EOF'
+usage: discord.sh <command>
+  send-dm                                  DM $DISCORD_USER_ID (text on stdin)
+  send-channel <channel_id>                post to channel (text on stdin)
+  fetch-captures <channel_id> [after_id]   full history as JSON, oldest first
+  react <channel_id> <message_id> [emoji]  add reaction (default ✅)
+EOF
+  exit 2
+}
+
+main() {
+  local cmd=${1:-}
+  shift || true
+  case $cmd in
+    send-dm)        : "${DISCORD_USER_ID:?DISCORD_USER_ID must be set}"; send_dm ;;
+    send-channel)   send_channel "${1:?usage: discord.sh send-channel <channel_id>}" ;;
+    fetch-captures) fetch_captures "${1:?usage: discord.sh fetch-captures <channel_id> [after_id]}" "${2:-0}" ;;
+    react)          react "${1:?channel_id required}" "${2:?message_id required}" "${3:-✅}" ;;
+    *)              usage ;;
+  esac
+}
+
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   set -euo pipefail
   : "${DISCORD_BOT_TOKEN:?DISCORD_BOT_TOKEN must be set}"

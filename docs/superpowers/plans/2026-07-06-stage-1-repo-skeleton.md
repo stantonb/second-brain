@@ -665,7 +665,7 @@ send_channel() {
   split_message "$dir"
   for f in "$dir"/chunk-*; do
     [[ -e $f ]] || { echo 'send_channel: empty message — nothing sent' >&2; break; }
-    payload=$(jq -Rs '{content: .}' "$f")
+    payload=$(jq -c -Rs '{content: .}' "$f")
     discord_api POST "/channels/$channel_id/messages" "$payload" > /dev/null || { rm -rf "$dir"; return 1; }
   done
   rm -rf "$dir"
