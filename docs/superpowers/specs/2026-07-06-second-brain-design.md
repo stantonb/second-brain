@@ -68,6 +68,15 @@ second-brain/
 | Discord | Bot token + REST via `curl` (`scripts/discord.sh`) | No hosted MCP dependency |
 | GitHub | `gh` CLI with `GH_TOKEN` | Fine-grained PAT + explicit repo allowlist in CLAUDE.md |
 
+> **2026-07-06 (Stage 0):** The brain is hosted on Stanton's **personal** claude.ai
+> account (Pro), not the Simply Business workspace: the work Claude org blocks
+> Gmail/Google Calendar connectors at org level, and connectors cannot be bridged
+> between accounts. The Notion workspace (including `CSD EL`) is Stanton's own, so the
+> Notion connector also runs on the personal account. Whether the **work** Google
+> account can connect on the personal claude.ai account is still being tested (setup
+> step zero); if blocked, the calendar-sharing fallback applies and work-email triage
+> moves to the roadmap (item 7).
+
 ### Cloud environment
 
 - Network access: **Custom** — default allowlist **plus `discord.com`**.
