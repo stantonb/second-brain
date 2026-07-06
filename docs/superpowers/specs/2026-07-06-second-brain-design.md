@@ -205,3 +205,13 @@ the repo's skills are portable to local cron/launchd (only `docs/setup.md` and s
 5. Meeting-prep briefs before each event (needs sub-hourly triggers or the always-on bot).
 6. Weather + "leave by" enrichment in the morning briefing.
 7. Work-email triage if the connector is blocked at launch.
+8. Knowledge ingestion (the original article's core idea): drop books/articles/links into
+   the brain and have Claude build cross-linked concept notes in Notion — the Reading
+   list's `Unread` items become the ingestion queue.
+9. Voice-memo capture: audio posted to `#capture` gets transcribed and triaged like text.
+10. Birthday/anniversary lead-time warnings in the morning briefing (feeds off People pages).
+11. Finance layer: spending/bill awareness (possibly building on the existing `Bank` project).
+12. Health/fitness data in the briefing (Strava/Whoop/Apple Health exports).
+13. News & interests digest: a curated section in the morning briefing on topics you follow.
+14. Spaced resurfacing: the briefing occasionally resurfaces an old note or decision
+    ("you wrote this 3 months ago — still true?").
