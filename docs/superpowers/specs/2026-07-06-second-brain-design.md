@@ -232,7 +232,8 @@ Created alongside (not inside) the existing structure:
   connectors. If blocked, apply the calendar-sharing fallback and move work-email triage
   to the roadmap.
 - Rollout order: morning briefing → run reliably for a few days → evening shutdown →
-  weekly review. One routine at a time.
+  weekly review. One routine at a time. Phase 2 starts only after the core has run
+  reliably for at least a week.
 
 ## Usage/cost
 
@@ -240,7 +241,32 @@ Created alongside (not inside) the existing structure:
 Claude Code on the web enabled). Routines are a research preview; if the surface changes,
 the repo's skills are portable to local cron/launchd (only `docs/setup.md` and scheduling change).
 
-## Roadmap (later phases)
+## Phase 2 (committed, after the core runs reliably)
+
+In build order:
+
+1. **On-demand briefing ("brief me now")** — add an API trigger to the morning-briefing
+   routine; an iOS Shortcut POSTs to the routine's `/fire` endpoint, with optional text
+   passed as run context (e.g. "focus on this evening"). Same skill, ad-hoc run ID,
+   DM delivery. Closes most of the gap to a two-way assistant with no extra infrastructure.
+2. **Dead-man's switch** — each run ends by pinging a per-routine healthchecks.io URL
+   (`HEALTHCHECK_URL_MORNING/EVENING/WEEKLY` env vars); a missed ping alerts by email/push
+   the same day. Catches runs that never started — the failure mode the weekly self-check
+   only notices on Sunday.
+3. **Weekly Notion backup** — the weekly run exports the Second Brain databases (Tasks,
+   Journal, Capture Log, Reading list, Brag doc) to markdown/JSON under `backups/` and
+   commits to this repo. Requires enabling unrestricted branch pushes for this repo, or
+   merging from a `claude/`-prefixed backup branch.
+4. **`meeting:` capture pipeline** — raw meeting notes pasted into `#capture` with a
+   `meeting:` prefix become a structured note (attendees, decisions, actions) in the
+   Second Brain section, with action items extracted into Tasks. `CSD EL` stays read-only.
+5. **Recurring tasks** — adds a Recurrence property (natural-language rule, e.g.
+   "every Sunday") to Tasks; when the evening run reconciles a completed recurring task,
+   it spawns the next instance with the next due date.
+6. **Time-block proposals** — the morning briefing suggests which of today's calendar gaps
+   fit the top 3 tasks. Actually writing events into the calendar is a separate, later decision.
+
+## Roadmap (possible later phases)
 
 1. People pages (colleagues/friends: last conversation, open loops, birthdays) powering
    meeting prep and relationship memory.
