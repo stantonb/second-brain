@@ -16,6 +16,52 @@ API_BASE="${DISCORD_API_BASE:-https://discord.com/api/v10}"
 MAX_LEN=2000
 MAX_RETRIES=5
 
+# discord_api METHOD PATH [JSON_BODY] — prints the response body on success.
+# Honors 429 Retry-After (header → JSON body → exponential backoff), MAX_RETRIES cap.
+discord_api() {
+  local method=$1 path=$2 attempt=0
+  local hdrs resp code body retry_after
+  hdrs=$(mktemp)
+  while :; do
+    if (( $# >= 3 )); then
+      resp=$(curl -sS -X "$method" -D "$hdrs" -w $'\n%{http_code}' \
+        -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+        -H 'Content-Type: application/json' \
+        -d "$3" "$API_BASE$path")
+    else
+      resp=$(curl -sS -X "$method" -D "$hdrs" -w $'\n%{http_code}' \
+        -H "Authorization: Bot $DISCORD_BOT_TOKEN" \
+        "$API_BASE$path")
+    fi
+    code=${resp##*$'\n'}
+    body=${resp%$'\n'*}
+    if [[ $code == 429 ]]; then
+      attempt=$((attempt + 1))
+      if (( attempt > MAX_RETRIES )); then
+        rm -f "$hdrs"
+        echo "discord_api: still rate-limited after $MAX_RETRIES retries: $method $path" >&2
+        return 1
+      fi
+      retry_after=$(awk 'tolower($1)=="retry-after:" {gsub("\r",""); print $2}' "$hdrs")
+      if [[ -z $retry_after ]]; then
+        retry_after=$(jq -r '.retry_after // empty' <<<"$body" 2>/dev/null || true)
+      fi
+      if [[ -z $retry_after ]]; then
+        retry_after=$(( 2 ** attempt ))
+      fi
+      sleep "$retry_after"
+      continue
+    fi
+    rm -f "$hdrs"
+    if [[ $code == 2* ]]; then
+      printf '%s' "$body"
+      return 0
+    fi
+    echo "discord_api: $method $path → HTTP $code: $body" >&2
+    return 1
+  done
+}
+
 # split_message OUTDIR — stdin → OUTDIR/chunk-001..N, each ≤ MAX_LEN chars.
 # Splits at newline boundaries; single lines > MAX_LEN are hard-split.
 split_message() {
