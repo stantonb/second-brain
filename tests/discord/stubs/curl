@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Test stub for curl. Replays canned responses from $CURL_STUB_DIR:
+#   <n>.code (default 200), <n>.body (default {}), <n>.headers (default empty)
+# for the n-th invocation. Logs argv to calls.log and -d payloads to payloads.log.
+set -uo pipefail
+n=$(( $(cat "$CURL_STUB_DIR/count" 2>/dev/null || echo 0) + 1 ))
+echo "$n" > "$CURL_STUB_DIR/count"
+printf '%s\n' "$*" >> "$CURL_STUB_DIR/calls.log"
+
+hdr_target=''
+args=("$@")
+for (( i = 0; i < ${#args[@]}; i++ )); do
+  case ${args[i]} in
+    -D) hdr_target=${args[i+1]} ;;
+    -d) printf '%s\n' "${args[i+1]}" >> "$CURL_STUB_DIR/payloads.log" ;;
+  esac
+done
+
+code=$(cat "$CURL_STUB_DIR/$n.code" 2>/dev/null || echo 200)
+body=$(cat "$CURL_STUB_DIR/$n.body" 2>/dev/null || echo '{}')
+if [[ -n $hdr_target ]]; then
+  if [[ -f "$CURL_STUB_DIR/$n.headers" ]]; then
+    cat "$CURL_STUB_DIR/$n.headers" > "$hdr_target"
+  else
+    : > "$hdr_target"
+  fi
+fi
+printf '%s\n%s' "$body" "$code"
