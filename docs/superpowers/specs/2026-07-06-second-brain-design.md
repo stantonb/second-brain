@@ -72,10 +72,17 @@ second-brain/
 > account (Pro), not the Simply Business workspace: the work Claude org blocks
 > Gmail/Google Calendar connectors at org level, and connectors cannot be bridged
 > between accounts. The Notion workspace (including `CSD EL`) is Stanton's own, so the
-> Notion connector also runs on the personal account. Whether the **work** Google
-> account can connect on the personal claude.ai account is still being tested (setup
-> step zero); if blocked, the calendar-sharing fallback applies and work-email triage
-> moves to the roadmap (item 7).
+> Notion connector also runs on the personal account.
+>
+> **2026-07-06 (setup step zero result):** the **work** Google account cannot connect
+> on the personal claude.ai account either — blocked on the Google Workspace side.
+> Work-email triage stays on the roadmap (item 7). The calendar-sharing fallback is
+> agreed but **not yet applied** (tracked as a TODO): share the work calendar into the
+> personal Gmail account ("See all event details", or free/busy if org policy caps it).
+> Until then, briefings cover the personal calendar only. Longer-term alternative: ask
+> the Simply Business Google Workspace admin to allowlist the Claude connector app
+> (Admin console → Security → API controls → App access control), which would unlock
+> both work calendar and work-email triage directly.
 
 ### Cloud environment
 
