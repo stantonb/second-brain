@@ -52,7 +52,9 @@ Expected: `Bats 1.x.x`.
 set -uo pipefail
 n=$(( $(cat "$CURL_STUB_DIR/count" 2>/dev/null || echo 0) + 1 ))
 echo "$n" > "$CURL_STUB_DIR/count"
-printf '%s\n' "$*" >> "$CURL_STUB_DIR/calls.log"
+# one line per call: escape embedded newlines (e.g. in -w formats) so line N = call N
+argv="$*"
+printf '%s\n' "${argv//$'\n'/\\n}" >> "$CURL_STUB_DIR/calls.log"
 
 hdr_target=''
 args=("$@")

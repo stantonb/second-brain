@@ -96,6 +96,24 @@ split_message() {
   unset -f _flush
 }
 
+# fetch_captures CHANNEL_ID [AFTER_ID] — prints a JSON array, oldest first.
+# Pages with limit=100 + the `after` cursor until an empty page: full catch-up,
+# never a recency window.
+fetch_captures() {
+  local channel_id=$1 after=${2:-0} page combined='[]'
+  while :; do
+    page=$(discord_api GET "/channels/$channel_id/messages?limit=100&after=$after") || return 1
+    # Snowflake ids overflow jq numbers — sort by (length, string) ≡ numeric order.
+    page=$(jq 'sort_by([(.id | length), .id])' <<<"$page")
+    if [[ $(jq 'length' <<<"$page") -eq 0 ]]; then
+      break
+    fi
+    combined=$(jq -s '.[0] + .[1]' <<<"$combined$page")
+    after=$(jq -r '.[-1].id' <<<"$page")
+  done
+  printf '%s\n' "$combined"
+}
+
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
   set -euo pipefail
   : "${DISCORD_BOT_TOKEN:?DISCORD_BOT_TOKEN must be set}"
