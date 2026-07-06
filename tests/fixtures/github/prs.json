@@ -1,0 +1,17 @@
+{
+  "review_requested": [
+    { "repo": "example-org/quote-engine", "number": 4123,
+      "title": "Extract rating client into gem",
+      "url": "https://github.com/example-org/quote-engine/pull/4123" }
+  ],
+  "mine": [
+    { "repo": "example-org/quote-engine", "number": 4098,
+      "title": "Rate-limit inbound webhooks", "ci": "FAILURE",
+      "review": "CHANGES_REQUESTED",
+      "url": "https://github.com/example-org/quote-engine/pull/4098" }
+  ],
+  "ci_failures": [
+    { "repo": "example-org/quote-engine", "number": 4098,
+      "title": "Rate-limit inbound webhooks" }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  { "name": "Book dentist", "status": "Next", "domain": "Personal", "due": null,
+    "priority": "Low", "created": "2026-06-10", "last_touched": null, "pinned": false,
+    "snoozed_until": null, "rollover_count": 0, "waiting_on": null,
+    "source": "manual", "source_id": "manual" },
+  { "name": "Q3 roadmap draft", "status": "In progress", "domain": "Work",
+    "due": "2026-07-06", "priority": "High", "created": "2026-06-28",
+    "last_touched": "2026-07-03", "pinned": false, "snoozed_until": null,
+    "rollover_count": 3, "waiting_on": null, "source": "manual", "source_id": "manual" },
+  { "name": "Chase legal re DPA", "status": "Waiting", "domain": "Work", "due": null,
+    "priority": "Medium", "created": "2026-07-01", "last_touched": "2026-07-02",
+    "pinned": false, "snoozed_until": null, "rollover_count": 0, "waiting_on": "Sam",
+    "source": "Discord capture", "source_id": "1391000000000000001" },
+  { "name": "Renew passport", "status": "Next", "domain": "Personal",
+    "due": "2026-09-01", "priority": "Medium", "created": "2026-05-20",
+    "last_touched": null, "pinned": true, "snoozed_until": null, "rollover_count": 0,
+    "waiting_on": null, "source": "manual", "source_id": "manual" },
+  { "name": "Write blog post on routines", "status": "Next", "domain": "Personal",
+    "due": null, "priority": "Low", "created": "2026-06-01",
+    "last_touched": "2026-06-05", "pinned": false, "snoozed_until": null,
+    "rollover_count": 0, "waiting_on": null, "source": "manual", "source_id": "manual" }
+]
