@@ -292,7 +292,7 @@ teardown() { teardown_discord; rm -rf "$OUTDIR"; }
   [ "$(ls "$OUTDIR" | wc -l | tr -d ' ')" = "2" ]
   [ "$(wc -c < "$OUTDIR/chunk-001" | tr -d ' ')" -le 2000 ]
   # no line was cut in half: every line in chunk 1 is exactly 99 '='
-  run grep -cv '^={99}$' "$OUTDIR/chunk-001"
+  run grep -Ecv '^={99}$' "$OUTDIR/chunk-001"
   [ "$output" = "0" ]
 }
 
