@@ -22,7 +22,7 @@ dcode() {
 }
 
 echo "Env vars:"
-for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID GH_TOKEN; do
+for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID GH_TOKEN NOTION_TOKEN; do
   if [[ -n "${!var:-}" ]]; then ok "$var is set"; else bad "$var is missing"; fi
 done
 
@@ -75,7 +75,15 @@ else
 fi
 
 echo "Notion:"
-note "Notion goes via the claude.ai connector — not checkable from bash. Verified in-session (Stage 2 round-trip)."
+if [[ -n "${NOTION_TOKEN:-}" ]]; then
+  code=$(curl -s -o /dev/null -w '%{http_code}' \
+    -H "Authorization: Bearer $NOTION_TOKEN" -H 'Notion-Version: 2025-09-03' \
+    https://api.notion.com/v1/users/me)
+  if [[ $code == 200 ]]; then ok "NOTION_TOKEN valid (GET /users/me → 200)"; else bad "NOTION_TOKEN rejected (GET /users/me → $code)"; fi
+else
+  note "skipping Notion REST check (no NOTION_TOKEN)"
+fi
+note "Connector writes verified in-session (Stage 2 round-trip)."
 
 echo
 echo "check-env: $PASS passed, $FAIL failed."

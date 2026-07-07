@@ -61,6 +61,13 @@ in page create/update tools. Date properties use the expanded
 view (`view://396edd10-0411-81cb-9e08-000c9c12c6d9`) is for Stanton's eyes — skills
 compute the rolling list from properties, never from a view.
 
+**Notion access split** (spec note 2026-07-07): the connector's structured-query tools
+are plan-gated, so **every exhaustive read** (rolling list, capture cursor, journal
+week, aging/cull scans, self-check) goes through `scripts/notion.sh query
+<data-source-id> '<filter-json>'` — full pagination, never a partial or search-based
+read. Page **creation, content writing, and search** stay on the connector.
+`scripts/notion.sh archive <page-id>` is the only deletion path.
+
 ## Task schema
 
 Properties on the Tasks database (created in Stage 2):

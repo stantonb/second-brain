@@ -69,6 +69,22 @@ Everything a human must click to stand up the second brain. Machine-side validat
    `claude mcp add --transport http notion https://mcp.notion.com/mcp`
    then authenticate via `/mcp` (OAuth into the same workspace, same page grants).
 
+## 3b. Notion integration token (structured reads)
+
+The connector's query tools are plan-gated (Business + Notion AI), so structured reads
+go via a free internal integration (spec note 2026-07-07):
+
+1. <https://www.notion.so/profile/integrations> → **New integration**:
+   - Name: `second-brain`. Workspace: yours. Type: **Internal**.
+   - Capabilities: **Read content**, **Update content**, **Insert content**. No user
+     information needed.
+2. Copy the **Internal Integration Secret** → `NOTION_TOKEN` (see §4).
+3. Grant it pages (integration tokens see nothing until granted): open **Second Brain**
+   → **⋯** menu → **Connections** → add `second-brain`. Repeat for **CSD EL**.
+   Do **not** grant Habit Tracker or DnD. (Sub-pages inherit the grant.)
+4. CSD EL read-only is a behavioural rule — the token could technically write there;
+   the brain never does.
+
 ## 4. Local secrets
 
 ```sh
@@ -79,6 +95,7 @@ export DISCORD_USER_ID='...'
 export DISCORD_CAPTURE_CHANNEL_ID='...'
 export DISCORD_TEST_CHANNEL_ID='...'
 export GH_TOKEN='...'
+export NOTION_TOKEN='...'
 EOF
 chmod 600 ~/.config/second-brain/env
 ```
@@ -98,7 +115,7 @@ Every line must be ✅ before Stage 1 starts.
 ## 6. Cloud environment (configured in Stage 3)
 
 At claude.ai → Claude Code → this repo's cloud environment:
-- Network access: **Custom** → default allowlist **plus `discord.com`**.
-- Environment variables: the five from §4.
+- Network access: **Custom** → default allowlist **plus `discord.com` and `api.notion.com`**.
+- Environment variables: the six from §4.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.
 Exact steps live in the Stage 3 plan.
