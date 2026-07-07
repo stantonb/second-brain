@@ -62,7 +62,7 @@ second-brain/
 
 | Service | Path | Notes |
 |---|---|---|
-| Notion | claude.ai Notion connector | First-class connector; works inside routines |
+| Notion | claude.ai Notion connector **+ REST token for structured reads** | Connector for creation/content/search; see 2026-07-07 note |
 | Gmail/Calendar (personal) | claude.ai Google connectors | |
 | Gmail/Calendar (work) | claude.ai Google connectors **if** Simply Business IT allows | Fallback: share work calendar into personal calendar; work email drops to roadmap |
 | Discord | Bot token + REST via `curl` (`scripts/discord.sh`) | No hosted MCP dependency |
@@ -83,6 +83,18 @@ second-brain/
 > the Simply Business Google Workspace admin to allowlist the Claude connector app
 > (Admin console → Security → API controls → App access control), which would unlock
 > both work calendar and work-email triage directly.
+>
+> **2026-07-07 (Stage 2, agreed option A):** the Notion connector's structured-query
+> tools (SQL and view mode) are plan-gated behind Business + Notion AI, which Stanton's
+> plan lacks — creates/updates/fetch/search work, exhaustive row queries do not.
+> Deviation: structured **reads** (rolling list, capture cursor, journal week, aging)
+> and page **archival** go via a free Notion internal-integration token
+> (`NOTION_TOKEN` env var) against the public REST API (`api.notion.com`, version
+> 2025-09-03 data-source endpoints) through `scripts/notion.sh` — same
+> token-plus-curl pattern as Discord. The connector remains the path for page
+> creation, content writing, and search. Cloud network allowlist gains
+> `api.notion.com`. CSD EL read-only remains a behavioural rule (token capabilities
+> are workspace-wide, not per-page).
 
 ### Cloud environment
 
