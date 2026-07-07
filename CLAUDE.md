@@ -34,17 +34,32 @@ All "today"/"tomorrow" logic, date queries, run IDs, and Journal titles resolve 
 
 | Structure | Type | ID | Access |
 |---|---|---|---|
-| Second Brain | page | *(Stage 2)* | read/write — the ONLY place the brain writes |
-| Tasks | database | *(Stage 2)* | read/write |
-| Journal | database | *(Stage 2)* | read/write |
-| Capture Log | database | *(Stage 2)* | read/write |
-| Reading list | database | *(Stage 2)* | read/write |
-| Brag doc | page | *(Stage 2)* | append via weekly review only |
+| Second Brain | page | `396edd10-0411-804a-aa27-d3b69edb2c73` | read/write — the ONLY place the brain writes |
+| Tasks | database | `f60b21fb-2b63-4d5a-a594-4e474d2b872d` | read/write |
+| Journal | database | `36741149-3a2f-4f70-b764-5329ece87696` | read/write |
+| Capture Log | database | `3d2b93fe-cb98-40c6-9c1e-30b8fcf2d1fc` | read/write |
+| Reading list | database | `2932e40c-43c3-4b57-a43d-de37ad2616b0` | read/write |
+| Brag doc | page | `396edd10-0411-8199-b42a-e57f361b5242` | append via weekly review only |
 | CSD EL | page | `7b242022-7815-47d6-88a5-1c78af22ef59` | **READ-ONLY** — never write, rename, restructure, or append |
 | Habit Tracker | database | `1b9edd10-0411-80e8-a866-ec69c2de441a` | **EXCLUDED — never read, never write** (not granted to the connector) |
 | DnD | database | `12cedd10-0411-8013-8144-ff61b04f1287` | **EXCLUDED — never read, never write** (not granted to the connector) |
 
 Everything else in the workspace: readable as context; **no writes outside Second Brain**.
+
+Data-source (collection) IDs — use these with the connector's query tools:
+
+| Database | Data source |
+|---|---|
+| Tasks | `collection://01e1c068-5703-423a-b910-f4bd5644e4ab` |
+| Journal | `collection://a2dd6ff2-6131-49d1-943c-3fcfe6b15d0d` |
+| Capture Log | `collection://83a1f8af-290f-4bea-aa51-c2f2e74c8e76` |
+| Reading list | `collection://103ccd0e-302f-4485-b737-a400a37f65a0` |
+
+Connector quirks: the Reading list `URL` property must be addressed as `userDefined:URL`
+in page create/update tools. Date properties use the expanded
+`date:{Property}:start` form. Checkboxes use `__YES__`/`__NO__`. The `Rolling list`
+view (`view://396edd10-0411-81cb-9e08-000c9c12c6d9`) is for Stanton's eyes — skills
+compute the rolling list from properties, never from a view.
 
 ## Task schema
 
