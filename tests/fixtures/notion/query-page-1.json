@@ -1,0 +1,2 @@
+{ "object": "list", "results": [ { "id": "t1" }, { "id": "t2" } ],
+  "has_more": true, "next_cursor": "cursor-abc" }
