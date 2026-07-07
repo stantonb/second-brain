@@ -1,0 +1,11 @@
+{
+  "needs_reply": [
+    { "from": "Maya Chen", "subject": "Q3 platform review — your slides?", "received": "yesterday" }
+  ],
+  "deadlines": [
+    { "source": "HMRC reminder", "deadline": "2026-07-31", "what": "self-assessment payment on account" }
+  ],
+  "waiting_on": [
+    { "to": "Alex Kim", "subject": "Contract renewal next steps", "sent_days_ago": 4 }
+  ]
+}
