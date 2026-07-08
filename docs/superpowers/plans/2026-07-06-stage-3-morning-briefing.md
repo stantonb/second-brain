@@ -230,6 +230,12 @@ If the routines surface differs from what the `schedule` skill expects (research
 
 **Files:** none.
 
+> **2026-07-08:** Morning 1 (Wed 8 Jul) verified — Journal `morning-2026-07-08`
+> created 06:49 BST, single page, correct format; capture invariants cross-checked
+> (Capture Log rows + Tasks with matching Source IDs). Stanton explicitly waived
+> Morning 2 (Thu 9 Jul) the same day ("Lets skip tomorrows briefing and continue") —
+> checkpoint closed on **one** scheduled delivery at his call; Stage 4 unblocked.
+
 - [ ] **Step 1: Morning 1** — after the first scheduled 06:45 run: Stanton confirms the DM (time ~07:00, content sane); check the Journal page exists and matches the DM.
 - [ ] **Step 2: Morning 2** — same checks the next day. Two consecutive scheduled deliveries = the gate.
 - [ ] **Step 3: STOP.** Ask Stanton explicitly: "Do the briefings look right — content, ordering, tone, timing? Stage 4 (evening shutdown) starts only on your word." Wait for confirmation.
