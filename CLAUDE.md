@@ -123,6 +123,14 @@ Apply to each unprocessed `#capture` message, first match wins:
    `Next` if clearly actionable now. Source = `Discord capture`, Source ID = message ID.
 8. Anything else → note appended to today's Journal page.
 
+**Multi-intent messages** (agreed 2026-07-08): a message made of multiple lines or
+numbered/bulleted items (strip `N.` / `-` prefixes before matching) where **every**
+line matches rules 1–6 is split and each line triaged independently, in order. One
+Capture Log row for the whole message records the combined result (Raw Text = full
+message; Outcome = first line's outcome). If any line fails to match rules 1–6, the
+whole message triages as a single unit — and if it mixes intent lines with unmatched
+text, it goes to `Needs Review`; never half-process.
+
 Every processed capture gets a Capture Log row (Message ID, Raw Text, Processed At,
 Outcome, Confidence, Link) **then** a ✅ reaction, and is counted in the next briefing
 ("Captured: 3 tasks, 1 link").
