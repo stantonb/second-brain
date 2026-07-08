@@ -293,6 +293,15 @@ In build order:
    it spawns the next instance with the next due date.
 6. **Time-block proposals** — the morning briefing suggests which of today's calendar gaps
    fit the top 3 tasks. Actually writing events into the calendar is a separate, later decision.
+7. **121 action-point ingestion** *(added 2026-07-08, Stanton's request)* — 1:1 notes are
+   pages titled `DDMMYYYY - 121` under `CSD EL → Direct Reports → {person} → {year}`.
+   A daily run scans — **read-only, as CSD EL always is** — for 121 pages edited since
+   its last scan and turns bullets under an "Action points"/"Actions" heading — only
+   those (agreed 2026-07-08; Stanton keeps the heading convention, notes without the
+   section are skipped by design) — into Tasks: Domain `Work`, Status `Inbox`,
+   Source = the 121 page, Source ID = `{page-id}#{bullet-key}` so reruns can't
+   duplicate (dedupe lives in Tasks; CSD EL is never written, so no ingested-marker
+   there). Shares extraction logic with item 4's `meeting:` pipeline — build adjacent.
 
 ## Roadmap (possible later phases)
 

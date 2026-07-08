@@ -26,3 +26,5 @@ against what the week reveals (routine trigger surface, failure modes). Committe
 9. `meeting:` capture pipeline
 10. Recurring tasks
 11. Time-block proposals
+12. 121 action-point ingestion (Phase 2 item 7, added 2026-07-08 — actions from
+    `DDMMYYYY - 121` notes under read-only CSD EL into Tasks)
