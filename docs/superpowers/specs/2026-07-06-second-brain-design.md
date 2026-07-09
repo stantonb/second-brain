@@ -95,6 +95,17 @@ second-brain/
 > creation, content writing, and search. Cloud network allowlist gains
 > `api.notion.com`. CSD EL read-only remains a behavioural rule (token capabilities
 > are workspace-wide, not per-page).
+>
+> **2026-07-09 (Stage 4, agreed):** the connector's write tools proved unreliable in
+> cloud sessions — the scheduled morning run of 2026-07-09 could query but had no
+> `create-pages`/`update-page` tools (enabledInChat-style regression, second
+> occurrence), so the DM was delivered with a ⚠️ and the Journal page had to be
+> backfilled locally from the DM text. Deviation, at Stanton's direction ("the notion
+> MCP is unreliable, let's work around it"): **all Notion writes** move to
+> `scripts/notion.sh` (new TDD'd commands `create`, `set-props`, `append` against the
+> REST API; the `NOTION_TOKEN` integration already has read+update+insert
+> capabilities). The connector is reduced to search and interactive reads. CSD EL
+> read-only and the Habit Tracker / DnD exclusions remain behavioural rules, unchanged.
 
 ### Cloud environment
 

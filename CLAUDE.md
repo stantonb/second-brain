@@ -61,12 +61,16 @@ in page create/update tools. Date properties use the expanded
 view (`view://396edd10-0411-81cb-9e08-000c9c12c6d9`) is for Stanton's eyes — skills
 compute the rolling list from properties, never from a view.
 
-**Notion access split** (spec note 2026-07-07): the connector's structured-query tools
-are plan-gated, so **every exhaustive read** (rolling list, capture cursor, journal
-week, aging/cull scans, self-check) goes through `scripts/notion.sh query
-<data-source-id> '<filter-json>'` — full pagination, never a partial or search-based
-read. Page **creation, content writing, and search** stay on the connector.
-`scripts/notion.sh archive <page-id>` is the only deletion path.
+**Notion access split** (spec note 2026-07-07, revised 2026-07-09): the connector's
+structured-query tools are plan-gated, and its write tools proved unreliable in cloud
+sessions (2026-07-09: `create-pages`/`update-page` absent mid-run). `scripts/notion.sh`
+is therefore the path for **every exhaustive read** (rolling list, capture cursor,
+journal week, aging/cull scans, self-check — full pagination, never a partial or
+search-based read) **and every write**: `create <data-source-id> <props-json>
+[children-json]`, `set-props <page-id> <props-json>`, `append <page-id>
+<children-json>` (REST property JSON, not the connector's expanded form). The
+connector is for **search and interactive reads only** — no run may depend on
+connector write tools. `scripts/notion.sh archive <page-id>` is the only deletion path.
 
 ## Task schema
 

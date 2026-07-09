@@ -44,6 +44,51 @@ teardown() { teardown_notion; }
   [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/pages/page-9')" = "1" ]
 }
 
+@test "create_page POSTs parent data source + properties, no children by default" {
+  echo 200 > "$CURL_STUB_DIR/1.code"
+  printf '{"id":"new-page-1"}' > "$CURL_STUB_DIR/1.body"
+  run create_page ds-123 '{"Name":{"title":[{"text":{"content":"evening-2026-07-09"}}]}}'
+  [ "$status" -eq 0 ]
+  [ "$(jq -r '.id' <<<"$output")" = "new-page-1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.parent.type')" = "data_source_id" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.parent.data_source_id')" = "ds-123" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.properties.Name.title[0].text.content')" = "evening-2026-07-09" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq 'has("children")')" = "false" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c 'POST')" = "1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/pages')" = "1" ]
+}
+
+@test "create_page includes children blocks when given" {
+  echo 200 > "$CURL_STUB_DIR/1.code"
+  printf '{"id":"new-page-2"}' > "$CURL_STUB_DIR/1.body"
+  run create_page ds-123 '{"Name":{"title":[]}}' '[{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"text":{"content":"body line"}}]}}]'
+  [ "$status" -eq 0 ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.children[0].paragraph.rich_text[0].text.content')" = "body line" ]
+}
+
+@test "create_page rejects malformed properties JSON without calling the API" {
+  run create_page ds-123 'not-json'
+  [ "$status" -ne 0 ]
+  [ ! -f "$CURL_STUB_DIR/calls.log" ]
+}
+
+@test "update_props PATCHes page properties" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{}' > "$CURL_STUB_DIR/1.body"
+  run update_props page-7 '{"Status":{"select":{"name":"Done"}}}'
+  [ "$status" -eq 0 ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.properties.Status.select.name')" = "Done" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c 'PATCH')" = "1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/pages/page-7')" = "1" ]
+}
+
+@test "append_blocks PATCHes children onto the page" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{}' > "$CURL_STUB_DIR/1.body"
+  run append_blocks page-7 '[{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"text":{"content":"rerun note"}}]}}]'
+  [ "$status" -eq 0 ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.children[0].paragraph.rich_text[0].text.content')" = "rerun note" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/blocks/page-7/children')" = "1" ]
+}
+
 @test "CLI: unknown command prints usage and exits 2" {
   run bash scripts/notion.sh bogus
   [ "$status" -eq 2 ]
