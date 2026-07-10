@@ -15,6 +15,9 @@ before acting.
 All "today"/"tomorrow" logic, date queries, run IDs, and Journal titles resolve in
 **Europe/London**, explicitly — cloud runs default to UTC. In shell:
 `TZ=Europe/London date +%F`. Never rely on system-default time.
+Relative dates inside a capture ("tomorrow", "Friday") resolve from the **message's
+timestamp**, not the processing time — a capture triaged a day late must not shift
+its dates *(2026-07-10, after a "tomorrow" captured Thu was filed as due Sat)*.
 
 ## Run conventions
 
@@ -116,7 +119,11 @@ Apply to each unprocessed `#capture` message, first match wins:
    `Done`/`Dropped` **only if the match is unambiguous** (one clear candidate). For
    `done:` also set Completed + Last Touched. Ambiguous or no match → Capture Log row
    with Outcome `Needs Review`, surfaced in the next DM's decisions-needed section —
-   **never guess**.
+   **never guess**. *(2026-07-10)* Unprefixed natural-language completion/drop reports
+   ("tried X, no luck — tick it off", "re-did Y so that's done") are treated as
+   `done:`/`drop:` under the same gate: **exactly one clearly matching open task** →
+   auto-apply and report it in the next DM; otherwise `Needs Review`. Completed = the
+   capture's date, not the processing date.
 3. `snooze: <task> until <date>` → set Snoozed Until (date parsed in Europe/London).
 4. `waiting: <person> <thing>` → Task with Status `Waiting`, Waiting-on = person.
 5. `meeting: <text>` → reserved for Phase 2; until then treat as a Journal note and say
