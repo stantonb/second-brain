@@ -154,6 +154,17 @@ Production mode (no FIXTURE_MODE, no DRY_RUN). Rule #1: never fail silent.
 
 **Files:** none.
 
+> **2026-07-10:** Routine created ~18:45 BST (Google Drive connector removed from both
+> routines — it had attached by default). Manual run 18:50 BST: DM + `evening-2026-07-10`
+> journaled via the REST write path. Scheduled run 21:11 BST: rerun path verified —
+> same page updated with a rerun note, identical DM, no duplicates or double-processing.
+> Stanton waived the second scheduled delivery and confirmed the same evening ("Lets
+> skip the 2nd verification and say this looks good") — checkpoint closed at his call;
+> Stage 5 unblocked. Mid-stage deviations recorded en route: Notion writes moved to
+> notion.sh REST (spec note 2026-07-09) after the connector lost write tools in cloud
+> twice; multi-intent capture rule (2026-07-08); NL-completion auto-close + relative
+> dates from capture timestamp (2026-07-10).
+
 - [ ] **Step 1: After the first scheduled 21:00 run:** Stanton confirms the DM; Journal page checked; rollover counts in Notion spot-checked against the DM's claims (honesty check — the numbers must agree).
 - [ ] **Step 2: Second scheduled delivery verified the same way.**
 - [ ] **Step 3: STOP.** Ask Stanton: "Evening shutdowns look right? Stage 5 (weekly review) starts only on your word." Wait.
