@@ -313,6 +313,12 @@ In build order:
    Source = the 121 page, Source ID = `{page-id}#{bullet-key}` so reruns can't
    duplicate (dedupe lives in Tasks; CSD EL is never written, so no ingested-marker
    there). Shares extraction logic with item 4's `meeting:` pipeline — build adjacent.
+8. **Siri voice capture** *(added 2026-07-10, Stanton's request)* — an iOS Shortcut
+   posts dictated text into `#capture` via a Discord webhook; the brain is unchanged
+   (the capture protocol triages any non-self message; CLAUDE.md clarified 2026-07-10
+   that only the bot's own user ID is ignored, so webhook-authored messages are valid).
+   Phone-side setup steps in `docs/setup.md` §7. **No brain code and no build stage —
+   it does not wait for the Phase 2 gate and can be enabled immediately.**
 
 ## Roadmap (possible later phases)
 

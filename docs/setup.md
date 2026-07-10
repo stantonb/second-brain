@@ -119,3 +119,18 @@ At claude.ai → Claude Code → this repo's cloud environment:
 - Environment variables: the six from §4.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.
 Exact steps live in the Stage 3 plan.
+
+## 7. Siri voice capture (optional, phone-side only)
+
+1. Discord (desktop): right-click **#capture** → **Edit Channel** → **Integrations** →
+   **Webhooks** → **New Webhook** → name `siri-capture` → **Copy Webhook URL**.
+   Treat the URL as a secret — anyone holding it can post into #capture.
+2. iPhone → **Shortcuts** → **+**, name the shortcut `Capture`:
+   - **Ask for Input** (Input Type: Text, prompt: "Capture what?") — invoked via Siri,
+     this takes dictation.
+   - **Get Contents of URL** → paste the webhook URL → Method **POST** → Request Body
+     **JSON** → add field `content` = *Provided Input*.
+3. Say "Hey Siri, Capture", dictate, done — the text lands in #capture and the next
+   run triages it exactly like a typed message (Message ID dedupe, Capture Log row,
+   ✅ reaction). Webhook messages carry a bot-flagged author with its own ID; the
+   capture rules ignore only the brain's own bot user ID (CLAUDE.md, 2026-07-10).
