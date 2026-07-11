@@ -151,6 +151,11 @@ Outcome, Confidence, Link) **then** a ✅ reaction, and is counted in the next b
 Omit a section entirely when it has no content. `⚠️ couldn't reach <service>` lines go
 at the bottom. Discord markdown; keep each briefing scannable on a phone.
 
+**Shared-calendar prefixes** *(2026-07-11, from Stanton's capture)*: event titles
+starting `S –` are Stanton-specific — include them. Titles starting `G –` are
+Greta-specific — exclude them from listings, gaps, and day-shape entirely.
+Unprefixed events: include.
+
 ### Morning
 
 ```text
