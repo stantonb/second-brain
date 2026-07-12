@@ -239,9 +239,14 @@ Unprefixed events: include.
 The briefing reads PRs/CI **only** from these repos; the fine-grained PAT is scoped to
 match. `scripts/check-env.sh` parses the bullets — keep the exact `- owner/repo` format.
 
-*Pending — Stanton deferred the PAT and repo list on 2026-07-06. Until bullets are added
-here and `GH_TOKEN` exists, briefings skip the GitHub section with a ⚠️ pending line
-(this is configuration, not an outage).*
+- stantonb/second-brain
+- stantonb/WeddingSite
+- stantonb/ArbBot
+- stantonSB/Agent-Orchestrator
+
+*(2026-07-12: fine-grained read-only PAT created and allowlist agreed — all personal
+repos by choice; work repos may be added later. Until then the briefing's GitHub
+section covers exactly these four.)*
 
 ## Discord
 
