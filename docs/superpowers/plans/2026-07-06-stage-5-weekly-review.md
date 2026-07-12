@@ -208,6 +208,15 @@ Production mode (no FIXTURE_MODE, no DRY_RUN). Rule #1: never fail silent.
 
 **Files:** none.
 
+> **2026-07-12:** Scheduled Sunday 17:00 run verified end-to-end (journal 17:08 BST,
+> honest 8/14 self-check with every gap explained, Brag doc appended one new item
+> without duplicating the mid-week manual run's entry, S–/G– calendar rule and
+> capture-timestamp date rule both applied in production). Stanton confirmed
+> ("Looks good") — Stage 5 closed, core complete. Phase 2 gate now applies: plans
+> for Stages 6–11 are written only after a reliable week (next Sunday's self-check
+> clean or all gaps explained). Also proven this weekend: Siri webhook capture
+> (Phase 2 item 8, phone-side) — four dictations triaged to tasks.
+
 - [ ] **Step 1: After the first scheduled Sunday 17:00 run:** Stanton confirms the DM; Journal page checked; self-check verified against the real Journal contents; Brag doc append verified in Notion.
 - [ ] **Step 2: STOP.** Tell Stanton the core is fully live and the Phase 2 gate now applies: **Stages 6–11 start only after the core has run reliably for at least one week** (weekly self-check clean or all gaps explained). Their plans get written when he opens that gate.
 - [ ] **Step 3: Stage-completion commit**
