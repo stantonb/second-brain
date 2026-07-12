@@ -282,6 +282,36 @@ the repo's skills are portable to local cron/launchd (only `docs/setup.md` and s
 
 ## Phase 2 (committed, after the core runs reliably)
 
+> **2026-07-12 (planning gate opened early, at Stanton's direction):** the core
+> (Stages 0–5) is complete and live (commit `b7d2633`; morning 06:45, evening 21:00,
+> weekly Sunday 17:00 all verified in production). Stanton has opened the Phase 2
+> **planning** gate ahead of the full reliability week: plans for Stages 6–11 are
+> written now. **Execution of any Phase 2 stage still waits for Stanton's explicit
+> go**, stage by stage, per each plan's ✋ checkpoints — nothing ships from writing the
+> plans. The reliability bar is unchanged: **Sunday 19 Jul 2026's weekly self-check
+> must come back clean (or every gap explained)** before Phase 2 code is enabled in
+> production. Build order below is unchanged.
+
+> **2026-07-12 (Phase 2 surface verification, before writing Stages 6 & 8):** checked
+> the real claude.ai routines surface against the spec's guesses. Findings are from the
+> Claude Code routines documentation (which post-dates this repo's Jan-2026 baseline);
+> **Stanton's own Routines UI on the personal account is authoritative for exact values.**
+> - **Item 1 (on-demand trigger):** confirmed in principle — routines expose an
+>   on-demand **fire** endpoint (documented shape: `POST …/routines/{id}/fire` with a
+>   per-routine bearer token, an experimental `anthropic-beta` routine header, and an
+>   optional `{"text": …}` run-context body) **and** a **"Run now"** button in the UI.
+>   The spec's `/fire` assumption stands, so Stage 6 proceeds. The exact URL, header, and
+>   token are read off Stanton's Routines UI in Stage 6 Task 1 (only he can see them; the
+>   token value is never pasted into chat). If that UI shows only "Run now" and no
+>   external endpoint, that is a reality difference → Stage 6 stops and falls back to the
+>   documented alternative rather than inventing an endpoint.
+> - **Item 3 (backup push):** cloud routine runs push to GitHub under a **`claude/`-prefixed
+>   branch by default**; a per-repo **"Allow unrestricted branch pushes"** toggle in the
+>   routine's permissions enables direct pushes to `main`. Both paths are viable for the
+>   weekly backup; **Stanton chose direct-to-`main` (2026-07-12)** for zero weekly
+>   friction — Stage 8 enables the unrestricted-pushes toggle on `second-brain` and the
+>   weekly routine commits backups straight to `main`.
+
 In build order:
 
 1. **On-demand briefing ("brief me now")** — add an API trigger to the morning-briefing
