@@ -225,3 +225,32 @@ git commit -m "docs: setup §8 — on-demand brief-me iOS Shortcut (fire endpoin
 git add -A
 git commit -m "chore: complete Stage 6 — on-demand 'brief me now' live, scheduled run undisturbed" --allow-empty
 ```
+
+---
+
+## ✅ Stage 6 CLOSED — 2026-07-13
+
+On-demand "brief me now" is **live and verified in production**, and Stanton approved
+closing. He fired the `Brief me` iOS Shortcut; the run wrote its own page
+`morning-2026-07-13-ondemand-221013` (header self-marked `(on-demand · brief-me)`,
+**focus-less / sentinel path** — Stanton left the focus blank), delivered a DM, and left
+the scheduled `morning-2026-07-13` page **untouched** (no collision, no double-count).
+
+**First-fire collision — debugged & resolved (systematic-debugging).** The initial
+Shortcut build sent an **empty `text`** body; an empty fire is *defined* as a scheduled
+run, so fire #1 ran a rerun of the scheduled page (no on-demand page). Root cause = the
+`If/Otherwise` sentinel wasn't wired in the Shortcut. Fix = send non-empty `text` (the
+`brief me now` sentinel when no focus). This **confirmed both** the pre-emptive sentinel
+hardening *and* that the routine + skill correctly enter on-demand on any non-empty
+injected text — **no routine-prompt change needed** (H2 disproven). The focus-line path
+remains fixture-verified (Task 4); live focus fire optional, not required.
+
+**Noted, not actioned (Stanton's call):** fire #1 left a harmless `🔁 Rerun` section on
+`morning-2026-07-13` (original briefing intact above it) — cosmetic, left as-is.
+
+**Separate follow-up (NOT Stage 6):** the cloud run's GitHub section ⚠️'d — the read-only
+PAT can't see the allowlisted repos from the cloud env (proxy-`GH_TOKEN` shadowing,
+already on the watch-list). Needs the `GH_PAT` rename / scope fix independently.
+
+Deploy: all Stage 6 commits on `main` through `bdd7f2f`, plus the reminder-DM feature
+merge `b5b626f`. bats 24 green. **Stage 7 (dead-man's switch) starts only on Stanton's word.**
