@@ -40,6 +40,20 @@
   - **If the fire endpoint exists** (expected, per the spec's 2026-07-12 verification note): proceed to Task 2. Record the confirmed URL shape + header verbatim in `docs/setup.md` §8 (written in Task 5) — never the token.
   - **If the UI shows only "Run now" and no external endpoint:** reality differs from the spec. **STOP.** Record a dated spec note ("2026-07-12+: routines expose only manual Run-now, no external fire endpoint — on-demand-from-phone deferred; 'brief me now' available via Run-now in the app only"), tell Stanton, and pause Stage 6 for his direction. Do not invent an endpoint.
 
+> **2026-07-13 (dated note — Task 1 VERIFIED):** Fire endpoint **confirmed real** on
+> Stanton's personal claude.ai (Pro). Key correction to the spec's assumption: it is **not
+> shown by default** — a routine ships with only its Scheduled trigger, and "Run now" is
+> the sole manual control until you **add an API trigger** (Edit routine → Triggers → Add →
+> API). Confirmed shape: `POST https://api.anthropic.com/v1/claude_code/routines/{routine_id}/fire`,
+> bearer token in `Authorization`, beta header `anthropic-beta: experimental-cc-routine-2026-04-01`,
+> optional `{"text": …}` run-context body. Research preview; API fires count against the
+> daily routine cap (Pro = 5/day), "Run now" test fires don't. **Not** the fallback branch —
+> Stage 6 proceeds as designed. Token hygiene incident: the first fire token was accidentally
+> pasted into this chat and **regenerated immediately** (first token burned; never written to
+> repo/logs/memory). The live token lives only phone-side, entered when the iOS Shortcut is
+> built in Task 5. The exact `anthropic-beta` value is per the docs above; Stanton to
+> double-check it against his UI at Shortcut-build time.
+
 ---
 
 ### Task 2: On-demand run contract in CLAUDE.md + the morning-briefing skill
