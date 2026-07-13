@@ -23,6 +23,13 @@ its dates *(2026-07-10, after a "tomorrow" captured Thu was filed as due Sat)*.
 
 - **Run ID:** `{type}-{YYYY-MM-DD}` (Europe/London date), e.g. `morning-2026-07-06`.
   Dry runs append `-test`.
+- **On-demand ("brief me now"):** an on-demand morning briefing uses run ID
+  `morning-{YYYY-MM-DD}-ondemand-{HHMMSS}` (Europe/London). It is **never**
+  idempotency-merged with the scheduled `morning-{YYYY-MM-DD}` page — each brief-me is
+  its own Journal entry, delivered as a DM. On-demand is signalled by `ON_DEMAND=1`
+  (with optional `BRIEF_FOCUS` text) for local runs, or by run-context text injected by
+  the routine's fire endpoint in production. On-demand pages (`-ondemand-*`) and `-test`
+  pages are excluded from the weekly 14-entry self-check.
 - **Idempotency:** before writing, look up the Journal page titled with the run ID —
   update it (noting "rerun") rather than duplicating. A manual rerun must never
   double-create tasks or Journal entries.
