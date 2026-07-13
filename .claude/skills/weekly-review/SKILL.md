@@ -41,9 +41,9 @@ instead, so a test run never writes prose Stanton has to clean up) · production
    on the Brag doc page (ID in CLAUDE.md); create the heading if missing. This is the
    only write outside the databases — still inside Second Brain.
 4. **Self-check.** Expected Journal entries for the week = `morning-` and `evening-`
-   for each of the 7 days (14 total; ignore `-test` pages). Report `{N}/14` and list
-   every missing run ID with ⚠️. A green routine status only means the session ran —
-   this check is what catches quiet failures.
+   for each of the 7 days (14 total; ignore `-test` and `-ondemand-*` pages). Report
+   `{N}/14` and list every missing run ID with ⚠️. A green routine status only means the
+   session ran — this check is what catches quiet failures.
 5. **Deliver + journal.** Per mode; Journal page (title = run ID, Date = TODAY,
    Type = `Weekly`) with the full text — even if Discord failed.
 
