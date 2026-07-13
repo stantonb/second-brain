@@ -134,3 +134,29 @@ Exact steps live in the Stage 3 plan.
    run triages it exactly like a typed message (Message ID dedupe, Capture Log row,
    ✅ reaction). Webhook messages carry a bot-flagged author with its own ID; the
    capture rules ignore only the brain's own bot user ID (CLAUDE.md, 2026-07-10).
+
+## 8. On-demand "brief me now" (iOS Shortcut)
+
+Fires the `morning-briefing` routine ad-hoc from your phone via its **fire endpoint**.
+The endpoint is **not shown by default** — a routine ships with only its Scheduled
+trigger ("Run now" is the manual control). You reveal it by adding an **API trigger**
+(verified on the personal-account Routines UI, Stage 6 Task 1, 2026-07-13). The fire
+**token** is a secret — it lives **only** in this Shortcut, never in chat/logs/repo.
+
+1. claude.ai/code/routines → `morning-briefing` → **pencil / Edit routine** →
+   **Triggers → Add → API**. Copy the **fire URL** (shape
+   `POST https://api.anthropic.com/v1/claude_code/routines/{routine_id}/fire`) and click
+   **Generate token** — it's shown **once**, so copy it straight away (Regenerate/Revoke
+   from the same modal if it ever leaks). The required header is
+   `anthropic-beta: experimental-cc-routine-2026-04-01`.
+2. iPhone → **Shortcuts** → **+**, name it `Brief me`:
+   - **Ask for Input** (Text, prompt "Focus? (optional)") — dictated via Siri.
+   - **Get Contents of URL** → paste the fire URL → Method **POST** →
+     **Headers:** `Authorization` = `Bearer <token>`,
+     `anthropic-beta` = `experimental-cc-routine-2026-04-01`,
+     `Content-Type` = `application/json` →
+     Request Body **JSON** → field `text` = *Provided Input*.
+3. Say "Hey Siri, Brief me", optionally dictate a focus, done. A DM arrives with the
+   briefing; a `morning-<date>-ondemand-<HHMMSS>` Journal page is written; the scheduled
+   06:45 run is untouched. Note the quota: **API fires count against the daily routine
+   cap** (Pro = 5/day); manual **"Run now"** test fires from the UI don't.
