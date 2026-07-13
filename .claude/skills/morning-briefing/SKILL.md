@@ -1,6 +1,6 @@
 ---
 name: morning-briefing
-description: Compose and deliver the ~7am morning briefing DM — capture triage, today's calendar, top-3 tasks, email triage, GitHub PRs/CI, aging flags, decisions needed. Use for the daily 06:45 routine or an on-demand "brief me".
+description: Compose and deliver the ~7am morning briefing DM — capture triage, today's calendar, top-3 tasks, email triage, GitHub PRs/CI, aging flags, decisions needed, individual reminder DMs for tasks due/waking today. Use for the daily 06:45 routine or an on-demand "brief me".
 ---
 
 # Morning briefing
@@ -80,6 +80,22 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    - Deliver per mode (stdin pipe into `discord.sh`).
    - Write the full delivered text to the Journal page (title = run ID, Date = TODAY,
      Type = `Morning`) via the connector — **even if Discord delivery failed**.
+9. **Individual reminder notifications** (CLAUDE.md → Discord → individual reminder
+   notifications). Skip this step entirely for an **on-demand** run, or if step 0 found
+   the scheduled run ID's Journal page already existed (this is a rerun — the reminder
+   DMs already went out earlier today).
+   - Reminders = Tasks (excluding `Done`/`Dropped`) where `Due` = TODAY, union Tasks
+     where `Snoozed Until` = TODAY. Use the already-fetched rolling-list/task data from
+     step 3 plus a check against Due/Snoozed Until — no extra query needed if step 3's
+     read already covers all non-Done/Dropped tasks; otherwise one more
+     `notion.sh query` scoped to those two date filters.
+   - For each reminder, one separate call: `⏰ Due today: {name}` or
+     `⏰ Back from snooze: {name}`.
+     - Production: `printf '%s' "$MSG" | ./scripts/discord.sh send-dm`.
+     - `DRY_RUN=1`: `printf '%s' "$MSG" | ./scripts/discord.sh send-channel "$DISCORD_TEST_CHANNEL_ID"`.
+     - `FIXTURE_MODE=1`: no send — list each message under "Would send:".
+   - A task that is both due today and waking from snooze today gets one DM, not two
+     (prefer the "Due today" wording).
 
 ## Never
 
@@ -88,3 +104,4 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 - Add a ✅ reaction before its Capture Log row exists.
 - Read GitHub repos outside the allowlist.
 - List tasks from search results — exhaustive reads come from `notion.sh query` only.
+- Re-fire individual reminder DMs on an on-demand run or on a rerun of the scheduled run.
