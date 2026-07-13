@@ -147,6 +147,20 @@ git add -A && git commit -m "fix: on-demand briefing composition against fixture
 **Files:**
 - Modify: `docs/setup.md` (new `## 8. On-demand "brief me now" (iOS Shortcut)`)
 
+> **2026-07-13 (dated note — execution):** Step 1's live `#test` dry-run is **deferred to
+> the personal-cloud environment** at Stanton's direction. The local CLI session runs on
+> the WORK Claude account, which cannot reach Google (Calendar MCP token expired, Gmail
+> connector absent from the session), so a local `DRY_RUN` would `⚠️` both the Calendar
+> and Email sections — a work-account environment limit, **not** a Stage 6 defect.
+> Tasks 2–4 are done and committed on this branch (`0fe5b5c`, `3b545a8`); the fixture run
+> proved the on-demand mechanics (ad-hoc run ID `morning-<date>-ondemand-<HHMMSS>`,
+> scheduled page never looked up/touched, focus line + biased Top-3, `#test`/DM delivery).
+> Before-state of today's scheduled page locked for the eventual idempotency proof:
+> `morning-2026-07-13` id `39cedd10-0411-81d2-9810-e82339954695`,
+> `last_edited_time 2026-07-13T05:52:00.000Z`. Step 1 now runs on the personal cloud in
+> the production window (with Task 1 + Steps 2–5), gated on the reliability bar
+> (Sunday 19 Jul self-check clean/explained) + Stanton's explicit go.
+
 - [ ] **Step 1: Run the skill with `DRY_RUN=1 ON_DEMAND=1 BRIEF_FOCUS="test brief"`** (secrets sourced): live reads, real capture triage (idempotent), delivery to `#test`. Verify with Stanton (evidence, not claims):
   - `#test` receives an on-demand briefing with the focus line.
   - Journal page `morning-<today>-ondemand-<HHMMSS>-test` exists with the full text.
