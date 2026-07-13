@@ -16,7 +16,7 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 | `FIXTURE_MODE=1` | Read `tests/fixtures/**` per the mapping in `tests/fixtures/README.md` instead of live services. No network, **no Notion writes, no Discord sends** — print the composed briefing to stdout plus a "Would write:" list of every mutation that production would have made. |
 | `DRY_RUN=1` | Live reads and real capture triage (it is idempotent), but delivery goes to `#test` via `./scripts/discord.sh send-channel "$DISCORD_TEST_CHANNEL_ID"` and the run ID gets a `-test` suffix. |
 | (neither) | Production: DM via `send-dm`, Journal under the plain run ID. |
-| `ON_DEMAND=1` (+ optional `BRIEF_FOCUS="..."`) | On-demand "brief me now": run ID `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)`, DM delivery, **never touch the scheduled `morning-$TODAY` page**. If `BRIEF_FOCUS` is set, weave it into ordering/emphasis and note it in the header. In production this same mode is triggered by run-context text injected via the routine's fire endpoint (treat that text as `BRIEF_FOCUS`); with no injected text a routine run is the normal scheduled briefing. Combine with `DRY_RUN=1` to deliver an on-demand test to `#test`. |
+| `ON_DEMAND=1` (+ optional `BRIEF_FOCUS="..."`) | On-demand "brief me now": run ID `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)`, DM delivery, **never touch the scheduled `morning-$TODAY` page**. If `BRIEF_FOCUS` is set, weave it into ordering/emphasis and note it in the header. In production this same mode is triggered by run-context text injected via the routine's fire endpoint — the Shortcut always sends non-empty text, so **any** fire run is on-demand; treat that text as `BRIEF_FOCUS`, except a bare `brief me`/`brief me now` sentinel means on-demand with **no** focus. Only the cron schedule (no injected text) is the normal scheduled briefing. Combine with `DRY_RUN=1` to deliver an on-demand test to `#test`. |
 
 ## Access split (from CLAUDE.md)
 
@@ -29,17 +29,19 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 ## Procedure
 
 0. **Dates & idempotency.** `TODAY=$(TZ=Europe/London date +%F)`.
-   - **Scheduled/normal run** (no `ON_DEMAND`, no injected run-context text): run ID
-     `morning-$TODAY` (plus `-test` in DRY_RUN). Query the Journal database (ID in
-     CLAUDE.md) for a page titled with the run ID: if it exists this is a rerun — update
-     that page and note "(rerun)"; never create a duplicate.
-   - **On-demand run** (`ON_DEMAND=1`, or run-context text was injected by the fire
-     endpoint): run ID `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)` (plus
-     `-test` in DRY_RUN). This is always a fresh page — do **not** look up or update the
-     scheduled `morning-$TODAY` page. Treat any injected run-context text (or
-     `$BRIEF_FOCUS`) as focus: bias the Top-3 ordering and emphasis toward it and add a
-     one-line "🎯 On-demand brief — focus: {text}" under the header. Deliver as a DM
-     (or to `#test` under DRY_RUN) exactly like the scheduled run.
+   - **Scheduled/normal run** (no `ON_DEMAND`, and no injected run-context text — i.e. the
+     cron schedule): run ID `morning-$TODAY` (plus `-test` in DRY_RUN). Query the Journal
+     database (ID in CLAUDE.md) for a page titled with the run ID: if it exists this is a
+     rerun — update that page and note "(rerun)"; never create a duplicate.
+   - **On-demand run** (`ON_DEMAND=1`, or **any** run-context text was injected by the fire
+     endpoint — the Shortcut always sends non-empty text, so every fire lands here): run ID
+     `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)` (plus `-test` in DRY_RUN).
+     This is always a fresh page — do **not** look up or update the scheduled
+     `morning-$TODAY` page. Focus: if the injected text (or `$BRIEF_FOCUS`) is a bare
+     `brief me`/`brief me now` sentinel, there is **no** focus — compose the normal Top-3
+     with no focus line. Otherwise treat the text as focus: bias the Top-3 ordering/emphasis
+     toward it and add a one-line "🎯 On-demand brief — focus: {text}" under the header.
+     Deliver as a DM (or to `#test` under DRY_RUN) exactly like the scheduled run.
 1. **Triage captures.**
    - Cursor = highest Message ID across Capture Log rows (query the Capture Log data
      source, take max title; `0` if none).

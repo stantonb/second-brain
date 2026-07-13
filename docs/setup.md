@@ -151,11 +151,16 @@ trigger ("Run now" is the manual control). You reveal it by adding an **API trig
    `anthropic-beta: experimental-cc-routine-2026-04-01`.
 2. iPhone → **Shortcuts** → **+**, name it `Brief me`:
    - **Ask for Input** (Text, prompt "Focus? (optional)") — dictated via Siri.
+   - **If** *Provided Input* **has any value** → **Text** = *Provided Input*;
+     **Otherwise** → **Text** = `brief me now`. **End If.** This guarantees the request
+     body is never empty — a focus-less brief-me still reads as on-demand and never
+     collides with the scheduled `morning-<date>` page.
    - **Get Contents of URL** → paste the fire URL → Method **POST** →
      **Headers:** `Authorization` = `Bearer <token>`,
      `anthropic-beta` = `experimental-cc-routine-2026-04-01`,
      `Content-Type` = `application/json` →
-     Request Body **JSON** → field `text` = *Provided Input*.
+     Request Body **JSON** → field `text` = the **Text** produced by the If step above
+     (the dictated focus, or the `brief me now` sentinel).
 3. Say "Hey Siri, Brief me", optionally dictate a focus, done. A DM arrives with the
    briefing; a `morning-<date>-ondemand-<HHMMSS>` Journal page is written; the scheduled
    06:45 run is untouched. Note the quota: **API fires count against the daily routine

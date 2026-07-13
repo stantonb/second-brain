@@ -28,8 +28,13 @@ its dates *(2026-07-10, after a "tomorrow" captured Thu was filed as due Sat)*.
   idempotency-merged with the scheduled `morning-{YYYY-MM-DD}` page — each brief-me is
   its own Journal entry, delivered as a DM. On-demand is signalled by `ON_DEMAND=1`
   (with optional `BRIEF_FOCUS` text) for local runs, or by run-context text injected by
-  the routine's fire endpoint in production. On-demand pages (`-ondemand-*`) and `-test`
-  pages are excluded from the weekly 14-entry self-check.
+  the routine's fire endpoint in production. The fire path **always** injects non-empty
+  text (the iOS Shortcut sends the dictated focus, or the sentinel `brief me now` when
+  none is given), so **any** fire run is on-demand and only the cron schedule — which
+  injects no text — is a scheduled run. A bare `brief me`/`brief me now` sentinel means
+  on-demand with **no** specific focus (no focus line); any other injected text is the
+  focus. On-demand pages (`-ondemand-*`) and `-test` pages are excluded from the weekly
+  14-entry self-check.
 - **Idempotency:** before writing, look up the Journal page titled with the run ID —
   update it (noting "rerun") rather than duplicating. A manual rerun must never
   double-create tasks or Journal entries.
