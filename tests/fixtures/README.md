@@ -18,6 +18,9 @@ Mapping used by skills in fixture mode:
 | Gmail triage | `google/gmail.json` (from Stage 3) |
 | Notion Journal week query | `notion/journal-week.json` (from Stage 5) |
 | CSD EL recently-updated sub-pages | `notion/csd-el-recent.json` (from Stage 5) |
+| CSD EL 121 discovery walk (Stage 12) | `notion/csd-el-121-tree.json` |
+| CSD EL 121 page blocks — `get-blocks` (Stage 12) | `notion/csd-el-121-blocks.json` (keyed by page/block id) |
+| Tasks Source-ID dedupe set for 121 ingestion (Stage 12) | `notion/tasks-121-existing.json` |
 
 Dates inside fixtures are fixed (early July 2026); age-dependent assertions are written
 as "older than 14 days", which stays true at any later run date.

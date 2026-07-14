@@ -1,0 +1,16 @@
+{
+  "a1a1a1a1-0000-0000-0000-000000000001": [
+    { "id": "h-disc", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Discussion" } ] }, "has_children": false },
+    { "id": "b-disc1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Reviewed the migration timeline" } ] }, "has_children": false },
+    { "id": "h-act", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Action points" } ] }, "has_children": false },
+    { "id": "b-act1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Send Priya the Q3 review rubric by Friday" } ] }, "has_children": true },
+    { "id": "b-act2", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Book a skip-level with Priya's team" } ] }, "has_children": false }
+  ],
+  "b-act1": [
+    { "id": "b-act1a", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "include the panel feedback" } ] }, "has_children": false }
+  ],
+  "b1b1b1b1-0000-0000-0000-000000000002": [
+    { "id": "h-notes", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Notes" } ] }, "has_children": false },
+    { "id": "b-n1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Discussed career goals" } ] }, "has_children": false }
+  ]
+}
