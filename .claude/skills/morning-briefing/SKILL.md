@@ -56,10 +56,12 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 2. **121 action-point ingestion** (scheduled run only — skip entirely on an on-demand run,
    and on a rerun where step 0 found the scheduled run ID's Journal page already existed).
    Per `CLAUDE.md → ## 121 action-point ingestion`: walk CSD EL Direct Reports with
-   `./scripts/notion.sh get-blocks`, extract bullets under an Action-points heading, and
-   `./scripts/notion.sh create` a deduped `Inbox`/`Work` Task per **new** action
-   (`Source ID` `{page-id}#{bullet-key}`, dedupe by querying Tasks for
-   `Source ID starts_with "{page-id}#"`). Collect the newly-created actions for the
+   `./scripts/notion.sh get-blocks`, extract **Stanton's own** items under the
+   `Action Items`/`Follow-ups` sections (skip a report's own actions; strip the
+   `Stanton —` prefix and any `(carried over)` marker), and `./scripts/notion.sh create`
+   a deduped `Inbox`/`Work` Task per **new** action (`Source ID` `121:{person}#{bullet-key}`,
+   content-based, dedupe by querying Tasks for `Source ID starts_with "121:"`). Collect the
+   newly-created actions for the
    `🗂 New from 1:1s` section (step 9's compose). On **any** read failure: create nothing,
    add `⚠️ couldn't reach CSD EL 1:1 notes` (rule #1). In `FIXTURE_MODE` read the walk,
    page blocks, and existing Source IDs from the fixtures (`tests/fixtures/README.md`

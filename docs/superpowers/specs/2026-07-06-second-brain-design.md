@@ -352,6 +352,21 @@ In build order:
    path and is fully self-contained (carries its own small extraction; no dependency on a
    Meeting Notes DB). Stanton's chosen model is pull-from-Notion only. Still needs a plan
    written when he opens it; widen beyond CSD EL 121 pages if he wants other Notion notes pulled.**
+   **Update 2026-07-14 (reality check during Stage 12 Task 6 — live read of real 121
+   pages contradicted the assumed structure; STOPPED and asked Stanton, decisions below):**
+   real 1:1 pages use a fixed template — heading **"Action Items"** (not "Action
+   points"/"Actions") whose items are **`to_do` checkboxes** (not bullets), each
+   assignee-prefixed (`Stanton — …` vs `{Report} — …`), some tagged `(carried over)`;
+   plus a **"Follow-ups"** section of unprefixed bullets. The tree shape (person →
+   current-year → `DDMMYYYY - 121`) matched; extraction did not. Stanton's calls:
+   (1) ingest **only his own** actions — skip items explicitly assigned to a report, strip
+   the `Stanton —` prefix; (2) match heading `Action Items`/`Action points`/`Actions`
+   (case-insensitive) and ingest `to_do` **and** bulleted/numbered items; (3) dedupe **by
+   content across pages** — `Source ID = 121:{person}#{bullet-key}` (page-id dropped;
+   `(carried over)` marker stripped before hashing) so a carried-over action collapses to
+   one Task across that report's weekly 1:1s; (4) ingest **both** the `Action Items` and
+   `Follow-ups` sections. Contract + fixtures updated to match; the `{page-id}#…` Source-ID
+   form is superseded for 121 ingestion.
 8. **Siri voice capture** *(added 2026-07-10, Stanton's request)* — an iOS Shortcut
    posts dictated text into `#capture` via a Discord webhook; the brain is unchanged
    (the capture protocol triages any non-self message; CLAUDE.md clarified 2026-07-10

@@ -1,16 +1,26 @@
 {
   "a1a1a1a1-0000-0000-0000-000000000001": [
-    { "id": "h-disc", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Discussion" } ] }, "has_children": false },
-    { "id": "b-disc1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Reviewed the migration timeline" } ] }, "has_children": false },
-    { "id": "h-act", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Action points" } ] }, "has_children": false },
-    { "id": "b-act1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Send Priya the Q3 review rubric by Friday" } ] }, "has_children": true },
-    { "id": "b-act2", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Book a skip-level with Priya's team" } ] }, "has_children": false }
+    { "id": "p1-h-disc", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Key Discussion Points" } ] }, "has_children": false },
+    { "id": "p1-b-disc1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Reviewed the migration timeline" } ] }, "has_children": false },
+    { "id": "p1-h-act", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Action Items" } ] }, "has_children": false },
+    { "id": "p1-a1", "type": "to_do", "to_do": { "rich_text": [ { "plain_text": "Stanton — Send Priya the Q3 review rubric by Friday" } ], "checked": false }, "has_children": true },
+    { "id": "p1-a2", "type": "to_do", "to_do": { "rich_text": [ { "plain_text": "Priya — Prepare her self-review draft" } ], "checked": false }, "has_children": false },
+    { "id": "p1-a3", "type": "to_do", "to_do": { "rich_text": [ { "plain_text": "Stanton — Book a skip-level with Priya's team (carried over)" } ], "checked": false }, "has_children": false },
+    { "id": "p1-h-fu", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Follow-ups" } ] }, "has_children": false },
+    { "id": "p1-f1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Confirm Priya's conference budget" } ] }, "has_children": false }
   ],
-  "b-act1": [
-    { "id": "b-act1a", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "include the panel feedback" } ] }, "has_children": false }
+  "p1-a1": [
+    { "id": "p1-a1c", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "include the panel feedback" } ] }, "has_children": false }
+  ],
+  "a2a2a2a2-0000-0000-0000-000000000003": [
+    { "id": "p2-h-act", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Action Items" } ] }, "has_children": false },
+    { "id": "p2-a1", "type": "to_do", "to_do": { "rich_text": [ { "plain_text": "Stanton — Book a skip-level with Priya's team (carried over)" } ], "checked": false }, "has_children": false },
+    { "id": "p2-a2", "type": "to_do", "to_do": { "rich_text": [ { "plain_text": "Stanton — Draft the promotion case for Priya" } ], "checked": false }, "has_children": false }
   ],
   "b1b1b1b1-0000-0000-0000-000000000002": [
-    { "id": "h-notes", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Notes" } ] }, "has_children": false },
-    { "id": "b-n1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Discussed career goals" } ] }, "has_children": false }
+    { "id": "ax-h-disc", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Key Discussion Points" } ] }, "has_children": false },
+    { "id": "ax-d1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "Discussed career goals" } ] }, "has_children": false },
+    { "id": "ax-h-dec", "type": "heading_2", "heading_2": { "rich_text": [ { "plain_text": "Decisions Made" } ] }, "has_children": false },
+    { "id": "ax-dec1", "type": "bulleted_list_item", "bulleted_list_item": { "rich_text": [ { "plain_text": "None" } ] }, "has_children": false }
   ]
 }

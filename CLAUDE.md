@@ -113,7 +113,7 @@ Properties on the Tasks database (created in Stage 2):
 | Last Rolled Over | date | set by the evening run |
 | Last Touched | date | any brain- or capture-driven update |
 | Source | text | human-readable origin |
-| Source ID | text | dedupe key: Discord message ID, Gmail message ID, GitHub PR URL, `manual`, or `{page-id}#{bullet-key}` for a Task ingested from a CSD EL 121 page (Stage 12) |
+| Source ID | text | dedupe key: Discord message ID, Gmail message ID, GitHub PR URL, `manual`, or `121:{person}#{bullet-key}` for a Task ingested from a CSD EL 121 page (Stage 12, content-based) |
 
 **Rolling list** = Status ∈ {`Next`, `In progress`, `Waiting`}, excluding tasks whose
 Snoozed Until is after today. Rollover state lives in these properties, updated by the
@@ -165,12 +165,13 @@ Outcome, Confidence, Link) **then** a ✅ reaction, and is counted in the next b
 ## 121 action-point ingestion (Notion pull)
 
 *(Phase 2 item 7 — Stage 12. The **sole** meeting-notes → Tasks path; the `meeting:` push
-model, item 4 / Stage 9, was skipped 2026-07-14.)*
+model, item 4 / Stage 9, was skipped 2026-07-14. Extraction rules revised 2026-07-14 after
+a live read of the real 121 template — see the spec's item-7 update.)*
 
 The **scheduled** morning run (`morning-{TODAY}`, no `ON_DEMAND`, first run of the day)
-pulls action points from Stanton's 1:1 notes in **read-only** CSD EL and files them as
-Tasks. It **never** runs on an on-demand brief-me or on a rerun, and it **never writes,
-appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
+pulls **Stanton's own** action points from his 1:1 notes in **read-only** CSD EL and files
+them as Tasks. It **never** runs on an on-demand brief-me or on a rerun, and it **never
+writes, appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
 
 - **Source pages.** 1:1 notes are child pages titled `DDMMYYYY - 121` under
   `CSD EL → Direct Reports → {person} → {year}`. The Direct Reports page ID is in the
@@ -179,29 +180,46 @@ appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
   whose title is the current Europe/London year) → `child_page`s whose title matches
   `^\d{8} - 121$`. Only the current-year folder is scanned — **known limitation:** a 121
   filed under the previous year in early January is not picked up (acceptable at this
-  volume). Nothing outside the Direct Reports subtree is ever read.
-- **Extraction.** For each 121 page, `get-blocks` the page and find the first heading
-  (`heading_1/2/3`) whose trimmed plain text is `Action points` or `Actions`
-  (case-insensitive). Ingest the `bulleted_list_item`/`numbered_list_item` blocks that
-  follow it, up to the next heading (any level) or the end of the page. Only **top-level**
-  list items become actions; a bullet's nested children (fetched with another
-  `get-blocks` when `has_children` is `true`) are folded into that action as detail. A
-  page with **no** Action-points heading is **skipped by design** — no task, no error.
+  volume). Non-person children (e.g. a "Tough conversations" note) simply have no
+  current-year 121 pages and yield nothing. Nothing outside the Direct Reports subtree is
+  ever read.
+- **Target sections** *(the real 121 template, confirmed live 2026-07-14)*. For each 121
+  page, `get-blocks` the page and find **every** heading (`heading_1/2/3`) whose trimmed
+  plain text (case-insensitive) is one of `Action Items` / `Action points` / `Actions`
+  **or** `Follow-ups` / `Follow ups`. For each such heading, the candidate items are the
+  `to_do` / `bulleted_list_item` / `numbered_list_item` blocks that follow it, up to the
+  next heading (any level) or the end of the page. Only **top-level** items are candidates;
+  an item's nested children (fetched with another `get-blocks` when `has_children` is
+  `true`) are folded into it as detail. A page with **none** of these headings is
+  **skipped by design** — no task, no error.
+- **Ownership filter — Stanton's actions only** *(Stanton's call 2026-07-14)*. 1:1 items
+  are assignee-prefixed `{Name} — {action}` (Action Items always are; Follow-ups usually
+  aren't). Per candidate item: if it begins with a single leading name token followed by an
+  em-dash or hyphen (`^{Name} —` / `^{Name} -`) and `{Name}` is **not** `Stanton`/`Stan`
+  (i.e. it is a direct report's name), **skip it** — that is the report's action, not
+  Stanton's. If the prefix **is** `Stanton`/`Stan`, **strip the prefix**. Items with no such
+  name prefix are **kept as-is** (this is how the unprefixed Follow-ups get ingested). Net
+  effect: Stanton's own Action Items (prefix stripped) + all unprefixed Follow-ups; a
+  report's own to-dos never land on Stanton's list.
+- **Cleanup before use.** From the kept item's text, also strip a trailing `(carried over)`
+  marker (case-insensitive, any surrounding spaces) — it is provenance, not part of the
+  task. The result is the **action text**.
 - **One action → one Task** via `scripts/notion.sh create` on the Tasks data source:
-  - `Name` = the bullet's text; nested detail appended as ` — {child}; {child}`.
+  - `Name` = the action text; nested detail appended as ` — {child}; {child}`.
   - `Domain` = `Work`; `Status` = `Inbox`; `Priority` = left blank.
   - `Project/Area` = the direct report's name (the `{person}` folder; the select option is
     created on first write).
-  - `Due` = set **only** if the bullet states a deadline, resolved from the **121 page's
+  - `Due` = set **only** if the action states a deadline, resolved from the **121 page's
     own date** (parsed from its `DDMMYYYY` title), Europe/London — e.g. "by Friday" on a
     `07072026` page → `2026-07-10`. No stated deadline → `Due` blank.
   - `Source` = `1:1 with {person}, {D Mon YYYY}` (the page's date).
-  - `Source ID` = `{page-id}#{bullet-key}` (below).
-- **bullet-key (stable dedupe).** `{bullet-key}` = the first 12 hex chars of the SHA-256
-  of the **normalised top-level bullet text** — the bullet's own text only, **excluding**
-  any folded child detail (normalisation = lowercase → collapse each run of whitespace to
-  one space → strip leading/trailing spaces). Canonical command (`$text` = the top-level
-  bullet text) — must stay **byte-identical every run**, or dedupe breaks:
+  - `Source ID` = `121:{person}#{bullet-key}` (below).
+- **bullet-key (stable, content-based dedupe).** `{bullet-key}` = the first 12 hex chars of
+  the SHA-256 of the **normalised action text** — the top-level item's own text *after* the
+  ownership-prefix strip and the `(carried over)` strip, **excluding** any folded child
+  detail (normalisation = lowercase → collapse each run of whitespace to one space → strip
+  leading/trailing spaces). Canonical command (`$text` = the action text) — must stay
+  **byte-identical every run**, or dedupe breaks:
 
   ```bash
   key=$(printf '%s' "$text" \
@@ -210,13 +228,19 @@ appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
     | cut -c1-12)
   ```
 
-  Position-independent: reordering bullets or editing *other* bullets never changes a key.
-  Editing a bullet's own wording yields a new key → a new task, leaving the old one for
-  manual triage (never a silent loss). Two identical bullets collapse to one task.
-- **Dedupe.** Before creating, read the page's existing Source IDs:
-  `scripts/notion.sh query <tasks-ds> '{"property":"Source ID","rich_text":{"starts_with":"{page-id}#"}}'`.
-  Skip any bullet whose `{page-id}#{bullet-key}` already exists. A rerun of the scheduled
-  morning run therefore creates nothing new.
+  **Content-based, page-independent** (Stanton's call 2026-07-14): the key does **not**
+  include the page-id, so the *same* action carried over across a report's weekly 1:1s
+  (`… (carried over)`, stripped above) hashes identically and collapses to **one** Task.
+  The Source ID is namespaced by `{person}` so two reports with coincidentally identical
+  action text stay separate. Editing an action's own wording yields a new key → a new task,
+  leaving the old one for manual triage (never a silent loss).
+- **Dedupe.** Read the existing 121-ingested Source IDs once into a set:
+  `scripts/notion.sh query <tasks-ds> '{"property":"Source ID","rich_text":{"starts_with":"121:"}}'`,
+  and **add each Source ID to that set as you create it this run**. Skip any action whose
+  `121:{person}#{bullet-key}` is already in the set. Process a report's pages **oldest-first**
+  so a carried-over action is filed from its earliest 1:1. A rerun of the scheduled morning
+  run, a carried-over item next week, **and** the same action carried across two of that
+  report's pages in one run therefore all create nothing new / exactly one Task.
 - **Surfacing.** Actions created **this run** are listed in the morning briefing's
   `🗂 New from 1:1s` section (Inbox tasks don't appear in the Top-3/rolling list). Omit the
   section when nothing new was ingested.
