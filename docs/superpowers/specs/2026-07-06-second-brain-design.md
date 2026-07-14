@@ -321,7 +321,9 @@ In build order:
 2. **Dead-man's switch** — each run ends by pinging a per-routine healthchecks.io URL
    (`HEALTHCHECK_URL_MORNING/EVENING/WEEKLY` env vars); a missed ping alerts by email/push
    the same day. Catches runs that never started — the failure mode the weekly self-check
-   only notices on Sunday.
+   only notices on Sunday. **🚫 SKIPPED 2026-07-14 (Stanton's decision): "we don't need
+   this" — descoped, not built. Plan `2026-07-12-stage-7-dead-mans-switch.md` retained for
+   the record; revivable if same-day miss-alerting is ever wanted.**
 3. **Weekly Notion backup** — the weekly run exports the Second Brain databases (Tasks,
    Journal, Capture Log, Reading list, Brag doc) to markdown/JSON under `backups/` and
    commits to this repo. Requires enabling unrestricted branch pushes for this repo, or

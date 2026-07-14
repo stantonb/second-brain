@@ -1,5 +1,10 @@
 # Stage 7 — Dead-Man's Switch (healthchecks.io) Implementation Plan ✋ CHECKPOINT STAGE
 
+> 🚫 **SKIPPED — 2026-07-14 (Stanton's decision):** "We don't need this." Stage 7 is
+> **descoped, not built** — no `scripts/healthcheck.sh`, no ping wiring, no healthchecks.io
+> account. This plan is retained for the record only. Next stage is **8 (weekly backup)**.
+> If the automation ever needs same-day miss-alerting later, this plan can be revived as-is.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. (Stanton pre-selected inline execution for this project.)
 
 **Goal:** Every production routine run ends by pinging a per-routine healthchecks.io URL, so a run that dies — or never starts — is caught by a missed-ping alert the same day, not only by Sunday's self-check.

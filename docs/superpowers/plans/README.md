@@ -31,9 +31,9 @@ USER-ACTION stops for anything only Stanton can do on the personal claude.ai acc
 
 | Order | Plan | Spec item | Gate |
 |---|---|---|---|
-| 6 | `2026-07-12-stage-6-on-demand-briefing.md` | 1 | ✋ a real phone-fired "brief me now" delivers a DM without disturbing the scheduled run + Stanton's OK |
-| 7 | `2026-07-12-stage-7-dead-mans-switch.md` | 2 | ✋ each routine's healthchecks.io check goes green on a real production ping + Stanton's OK |
-| 8 | `2026-07-12-stage-8-weekly-backup.md` | 3 | ✋ a real weekly run commits an updated backup to `main` (verified on `origin/main`) + Stanton's OK |
+| 6 | `2026-07-12-stage-6-on-demand-briefing.md` | 1 | ✅ **DONE 2026-07-13** (`fabab01`) — phone-fired "brief me now" verified live, scheduled run undisturbed |
+| 7 | `2026-07-12-stage-7-dead-mans-switch.md` | 2 | 🚫 **SKIPPED 2026-07-14** — Stanton decided not needed (descoped, not built) |
+| 8 | `2026-07-12-stage-8-weekly-backup.md` | 3 | ✋ a real weekly run commits an updated backup to `main` (verified on `origin/main`) + Stanton's OK — **NEXT** |
 | 9 | `2026-07-12-stage-9-meeting-pipeline.md` | 4 | ✋ a real `meeting:` capture → correct structured note + action tasks, dedupes on rerun + Stanton's OK |
 | 10 | `2026-07-12-stage-10-recurring-tasks.md` | 5 | ✋ a real recurring task spawns exactly one correct next instance (none on rerun) + Stanton's OK |
 | 11 | `2026-07-12-stage-11-time-block-proposals.md` | 6 | ✋ the ⏱ time-block section is accurate and never writes the calendar + Stanton's OK |
