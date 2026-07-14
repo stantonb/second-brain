@@ -1,5 +1,12 @@
 # Stage 9 — `meeting:` Capture Pipeline Implementation Plan ✋ CHECKPOINT STAGE
 
+> 🚫 **SKIPPED — 2026-07-14 (Stanton's decision):** "I'm never going to paste/dictate
+> meetings into #capture; I'd only ever pull meeting notes from Notion." The `meeting:`
+> **push** model is redundant for his workflow. **Superseded by Stage 12** (pull action
+> points from CSD EL 121 pages → Tasks), which is self-contained and doesn't need this.
+> Descoped, **not built** — no Meeting Notes DB, no `meeting:` triage rule. Plan retained
+> for the record; revivable if ad-hoc meeting capture is ever wanted.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. (Stanton pre-selected inline execution for this project.)
 
 **Goal:** A `meeting:` capture (raw notes pasted into `#capture`) becomes a structured **Meeting Notes** row in the Second Brain section — attendees, decisions, actions — with each action item extracted into a Task, all deduped so reprocessing never duplicates. `CSD EL` stays strictly read-only.

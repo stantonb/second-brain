@@ -331,6 +331,9 @@ In build order:
 4. **`meeting:` capture pipeline** — raw meeting notes pasted into `#capture` with a
    `meeting:` prefix become a structured note (attendees, decisions, actions) in the
    Second Brain section, with action items extracted into Tasks. `CSD EL` stays read-only.
+   **🚫 SKIPPED 2026-07-14 (Stanton's decision): "I'm never going to paste/dictate meetings
+   into #capture; I'd only ever pull meeting notes from Notion." The push model is redundant
+   — superseded by item 7 (121 pull, now self-contained). Descoped, not built; plan retained.**
 5. **Recurring tasks** — adds a Recurrence property (natural-language rule, e.g.
    "every Sunday") to Tasks; when the evening run reconciles a completed recurring task,
    it spawns the next instance with the next due date.
@@ -345,6 +348,10 @@ In build order:
    Source = the 121 page, Source ID = `{page-id}#{bullet-key}` so reruns can't
    duplicate (dedupe lives in Tasks; CSD EL is never written, so no ingested-marker
    there). Shares extraction logic with item 4's `meeting:` pipeline — build adjacent.
+   **Update 2026-07-14: item 4 is skipped, so this is now the SOLE meeting-notes → Tasks
+   path and is fully self-contained (carries its own small extraction; no dependency on a
+   Meeting Notes DB). Stanton's chosen model is pull-from-Notion only. Still needs a plan
+   written when he opens it; widen beyond CSD EL 121 pages if he wants other Notion notes pulled.**
 8. **Siri voice capture** *(added 2026-07-10, Stanton's request)* — an iOS Shortcut
    posts dictated text into `#capture` via a Discord webhook; the brain is unchanged
    (the capture protocol triages any non-self message; CLAUDE.md clarified 2026-07-10

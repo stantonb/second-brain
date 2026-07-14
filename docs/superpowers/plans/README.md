@@ -34,7 +34,7 @@ USER-ACTION stops for anything only Stanton can do on the personal claude.ai acc
 | 6 | `2026-07-12-stage-6-on-demand-briefing.md` | 1 | ✅ **DONE 2026-07-13** (`fabab01`) — phone-fired "brief me now" verified live, scheduled run undisturbed |
 | 7 | `2026-07-12-stage-7-dead-mans-switch.md` | 2 | 🚫 **SKIPPED 2026-07-14** — Stanton decided not needed (descoped, not built) |
 | 8 | `2026-07-12-stage-8-weekly-backup.md` | 3 | ✋ a real weekly run commits an updated backup to `main` (verified on `origin/main`) + Stanton's OK — **NEXT** |
-| 9 | `2026-07-12-stage-9-meeting-pipeline.md` | 4 | ✋ a real `meeting:` capture → correct structured note + action tasks, dedupes on rerun + Stanton's OK |
+| 9 | `2026-07-12-stage-9-meeting-pipeline.md` | 4 | 🚫 **SKIPPED 2026-07-14** — Stanton will only ever *pull* notes from Notion, never push `meeting:` captures. Superseded by Stage 12 (121 pull). Descoped, not built |
 | 10 | `2026-07-12-stage-10-recurring-tasks.md` | 5 | ✋ a real recurring task spawns exactly one correct next instance (none on rerun) + Stanton's OK |
 | 11 | `2026-07-12-stage-11-time-block-proposals.md` | 6 | ✋ the ⏱ time-block section is accurate and never writes the calendar + Stanton's OK |
 
@@ -47,8 +47,11 @@ toggle).
 ## Still unplanned (deliberately)
 
 - **Stage 12 — Phase 2 item 7: 121 action-point ingestion** (actions from `DDMMYYYY - 121`
-  notes under **read-only** CSD EL into Tasks). Reuses Stage 9's extraction convention;
-  planned when Stanton opens it.
+  notes under **read-only** CSD EL into Tasks). **This is now the sole meeting-notes → Tasks
+  path (Stage 9 skipped 2026-07-14 — Stanton only pulls from Notion, never pushes captures).**
+  Self-contained (no longer depends on Stage 9's extraction); still needs a plan written
+  when Stanton opens it. If he wants notes pulled from Notion beyond the CSD EL 121 pages,
+  widen its scope at planning time.
 - **Phase 2 item 8 — Siri voice capture** is already **live** (phone-side webhook +
   Shortcut, `docs/setup.md` §7) — no build stage, no gate.
 - The Roadmap items in the spec's final section remain possible later phases.
