@@ -94,3 +94,32 @@ teardown() { teardown_notion; }
   [ "$status" -eq 2 ]
   [[ "$output" == *"usage:"* ]]
 }
+
+@test "get-blocks GETs the block children path and returns the results array" {
+  echo 200 > "$CURL_STUB_DIR/1.code"
+  printf '{"results":[{"id":"b1","type":"heading_2"},{"id":"b2","type":"bulleted_list_item"}],"has_more":false,"next_cursor":null}' > "$CURL_STUB_DIR/1.body"
+  run get_blocks blk-1
+  [ "$status" -eq 0 ]
+  [ "$(jq 'length' <<<"$output")" = "2" ]
+  [ "$(jq -r '.[0].id' <<<"$output")" = "b1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c -- '-X GET')" = "1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/blocks/blk-1/children')" = "1" ]
+}
+
+@test "get-blocks paginates with start_cursor until has_more is false" {
+  echo 200 > "$CURL_STUB_DIR/1.code"
+  printf '{"results":[{"id":"b1"},{"id":"b2"}],"has_more":true,"next_cursor":"cur-1"}' > "$CURL_STUB_DIR/1.body"
+  echo 200 > "$CURL_STUB_DIR/2.code"
+  printf '{"results":[{"id":"b3"}],"has_more":false,"next_cursor":null}' > "$CURL_STUB_DIR/2.body"
+  run get_blocks blk-1
+  [ "$status" -eq 0 ]
+  [ "$(jq 'length' <<<"$output")" = "3" ]
+  [ "$(jq -r '.[2].id' <<<"$output")" = "b3" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c 'start_cursor')" = "0" ]
+  [ "$(sed -n '2p' "$CURL_STUB_DIR/calls.log" | grep -c 'start_cursor=cur-1')" = "1" ]
+}
+
+@test "get-blocks CLI: missing block id exits non-zero" {
+  run bash scripts/notion.sh get-blocks
+  [ "$status" -ne 0 ]
+}

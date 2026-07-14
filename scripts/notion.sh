@@ -8,6 +8,8 @@
 # Commands:
 #   query <data_source_id> [filter_json]   POST /v1/data_sources/{id}/query with full
 #                                          pagination; prints a JSON array of results
+#   get-blocks <block_id>                  GET /v1/blocks/{id}/children with full
+#                                          pagination; prints a JSON array of child blocks
 #   create <data_source_id> <properties_json> [children_json]
 #                                          create a row/page; prints the page object
 #   set-props <page_id> <properties_json>  update page properties
@@ -90,6 +92,28 @@ query_db() {
   printf '%s\n' "$combined"
 }
 
+# get_blocks BLOCK_ID — prints a JSON array of every child block of BLOCK_ID (page or
+# block), following has_more/next_cursor to the end (never a partial read). GET, so the
+# cursor rides the query string. Read-only; the sole primitive the Stage 12 121 ingestion
+# uses to walk CSD EL Direct Reports and read a 121 page's content.
+get_blocks() {
+  local id=$1 cursor='' combined='[]' page has_more path
+  while :; do
+    path="/blocks/$id/children?page_size=100"
+    if [[ -n $cursor ]]; then
+      path="$path&start_cursor=$cursor"
+    fi
+    page=$(notion_api GET "$path") || return 1
+    combined=$(jq -s '.[0] + .[1].results' <<<"$combined$page")
+    has_more=$(jq -r '.has_more' <<<"$page")
+    if [[ $has_more != true ]]; then
+      break
+    fi
+    cursor=$(jq -r '.next_cursor' <<<"$page")
+  done
+  printf '%s\n' "$combined"
+}
+
 # create_page DATA_SOURCE_ID PROPERTIES_JSON [CHILDREN_JSON] — create a page under a
 # data source; prints the created page object. jq validates the JSON args up front so
 # a malformed payload never reaches the API.
@@ -126,6 +150,7 @@ usage() {
   cat >&2 <<'EOF'
 usage: notion.sh <command>
   query <data_source_id> [filter_json]                all matching rows as a JSON array
+  get-blocks <block_id>                               all child blocks as a JSON array
   create <data_source_id> <properties_json> [children_json]  create a page
   set-props <page_id> <properties_json>               update page properties
   append <page_id> <children_json>                    append content blocks
@@ -140,6 +165,7 @@ main() {
   shift || true
   case $cmd in
     query)     query_db "${1:?usage: notion.sh query <data_source_id> [filter_json]}" "${2:-}" ;;
+    get-blocks) get_blocks "${1:?usage: notion.sh get-blocks <block_id>}" ;;
     create)    create_page "${1:?data_source_id required}" "${2:?properties_json required}" "${3:-}" ;;
     set-props) update_props "${1:?page_id required}" "${2:?properties_json required}" ;;
     append)    append_blocks "${1:?page_id required}" "${2:?children_json required}" ;;
