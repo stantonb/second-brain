@@ -37,6 +37,7 @@ USER-ACTION stops for anything only Stanton can do on the personal claude.ai acc
 | 9 | `2026-07-12-stage-9-meeting-pipeline.md` | 4 | 🚫 **SKIPPED 2026-07-14** — Stanton will only ever *pull* notes from Notion, never push `meeting:` captures. Superseded by Stage 12 (121 pull). Descoped, not built |
 | 10 | `2026-07-12-stage-10-recurring-tasks.md` | 5 | ✋ a real recurring task spawns exactly one correct next instance (none on rerun) + Stanton's OK |
 | 11 | `2026-07-12-stage-11-time-block-proposals.md` | 6 | ✋ the ⏱ time-block section is accurate and never writes the calendar + Stanton's OK |
+| 12 | `2026-07-14-stage-12-121-ingestion.md` | 7 | ✋ a real `DDMMYYYY - 121` page ingests correct deduped Tasks, dedupes on rerun, CSD EL untouched + Stanton's OK (+ reliability bar) — **planned 2026-07-14**, the sole notes→Tasks path (Stage 9 skipped) |
 
 Surface facts verified before writing (spec note 2026-07-12): routines expose an
 on-demand **fire** endpoint + a "Run now" button (Stage 6 reads the exact URL/token off
@@ -44,14 +45,17 @@ Stanton's Routines UI); cloud runs default to `claude/`-prefixed-branch pushes a
 **Stanton chose direct-to-`main`** for the backup (Stage 8 enables the unrestricted-pushes
 toggle).
 
+Stage 12 (`2026-07-14-stage-12-121-ingestion.md`) was **planned 2026-07-14** (brainstorm
++ writing-plans): the pull-from-Notion path that turns Action-point bullets in `DDMMYYYY -
+121` notes (under **read-only** CSD EL → Direct Reports) into deduped `Inbox`/`Work` Tasks,
+folded into the scheduled morning run. Self-contained — no Meeting Notes DB, no Stage 9
+dependency. Decisions baked in: REST read via a new `notion.sh get-blocks` (no connector
+dependency), scan-all + Source-ID dedupe (no cursor/state), content-hash bullet-key,
+strictly the CSD EL 121 pages. Execution gated on Stanton's explicit go + the reliability
+bar (19 Jul self-check clean/explained).
+
 ## Still unplanned (deliberately)
 
-- **Stage 12 — Phase 2 item 7: 121 action-point ingestion** (actions from `DDMMYYYY - 121`
-  notes under **read-only** CSD EL into Tasks). **This is now the sole meeting-notes → Tasks
-  path (Stage 9 skipped 2026-07-14 — Stanton only pulls from Notion, never pushes captures).**
-  Self-contained (no longer depends on Stage 9's extraction); still needs a plan written
-  when Stanton opens it. If he wants notes pulled from Notion beyond the CSD EL 121 pages,
-  widen its scope at planning time.
 - **Phase 2 item 8 — Siri voice capture** is already **live** (phone-side webhook +
   Shortcut, `docs/setup.md` §7) — no build stage, no gate.
 - The Roadmap items in the spec's final section remain possible later phases.
