@@ -198,9 +198,10 @@ appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
   - `Source` = `1:1 with {person}, {D Mon YYYY}` (the page's date).
   - `Source ID` = `{page-id}#{bullet-key}` (below).
 - **bullet-key (stable dedupe).** `{bullet-key}` = the first 12 hex chars of the SHA-256
-  of the **normalised** bullet text (normalisation = lowercase → collapse each run of
-  whitespace to one space → strip leading/trailing spaces). Canonical command — must stay
-  **byte-identical every run**, or dedupe breaks:
+  of the **normalised top-level bullet text** — the bullet's own text only, **excluding**
+  any folded child detail (normalisation = lowercase → collapse each run of whitespace to
+  one space → strip leading/trailing spaces). Canonical command (`$text` = the top-level
+  bullet text) — must stay **byte-identical every run**, or dedupe breaks:
 
   ```bash
   key=$(printf '%s' "$text" \
