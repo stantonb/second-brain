@@ -59,6 +59,10 @@ its dates *(2026-07-10, after a "tomorrow" captured Thu was filed as due Sat)*.
 | Habit Tracker | database | `1b9edd10-0411-80e8-a866-ec69c2de441a` | **EXCLUDED — never read, never write** (not granted to the connector) |
 | DnD | database | `12cedd10-0411-8013-8144-ff61b04f1287` | **EXCLUDED — never read, never write** (not granted to the connector) |
 
+CSD EL → **Direct Reports** sub-page (READ-ONLY; root of the Stage 12 121 action-point
+walk): `fe75b17b-c5b5-445f-b21f-bde18537c865` *(recorded 2026-07-14)*. Structure walked:
+`Direct Reports → {person} → {current year} → DDMMYYYY - 121`.
+
 Everything else in the workspace: readable as context; **no writes outside Second Brain**.
 
 Data-source (collection) IDs — use these with the connector's query tools:
