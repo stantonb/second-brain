@@ -16,7 +16,7 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 | `FIXTURE_MODE=1` | Read `tests/fixtures/**` per the mapping in `tests/fixtures/README.md` instead of live services. No network, **no Notion writes, no Discord sends** — print the composed briefing to stdout plus a "Would write:" list of every mutation that production would have made. |
 | `DRY_RUN=1` | Live reads and real capture triage (it is idempotent), but delivery goes to `#test` via `./scripts/discord.sh send-channel "$DISCORD_TEST_CHANNEL_ID"` and the run ID gets a `-test` suffix. |
 | (neither) | Production: DM via `send-dm`, Journal under the plain run ID. |
-| `ON_DEMAND=1` (+ optional `BRIEF_FOCUS="..."`) | On-demand "brief me now": run ID `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)`, DM delivery, **never touch the scheduled `morning-$TODAY` page**. If `BRIEF_FOCUS` is set, weave it into ordering/emphasis and note it in the header. In production this same mode is triggered by run-context text injected via the routine's fire endpoint — the Shortcut always sends non-empty text, so **any** fire run is on-demand; treat that text as `BRIEF_FOCUS`, except a bare `brief me`/`brief me now` sentinel means on-demand with **no** focus. Only the cron schedule (no injected text) is the normal scheduled briefing. Combine with `DRY_RUN=1` to deliver an on-demand test to `#test`. |
+| `ON_DEMAND=1` (+ optional `BRIEF_FOCUS="..."`) | On-demand "brief me now": run ID `morning-$TODAY-ondemand-$(TZ=Europe/London date +%H%M%S)`, DM delivery, **never touch the scheduled `morning-$TODAY` page**. If `BRIEF_FOCUS` is set, weave it into ordering/emphasis and note it in the header. In production this same mode is triggered by run-context text injected via the routine's fire endpoint — the Shortcut always sends non-empty text, so **any** fire run is on-demand; treat that text as `BRIEF_FOCUS`, except a bare `brief me`/`brief me now` sentinel means on-demand with **no** focus. Only the cron schedule (no injected text) is the normal scheduled briefing. Combine with `DRY_RUN=1` to deliver an on-demand test to `#test`. 121 action-point ingestion does **not** run on an on-demand brief-me — it is scheduled-run-only. |
 
 ## Access split (from CLAUDE.md)
 
@@ -53,38 +53,49 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
      Raw Text, Processed At = now, Outcome, Confidence, Link) →
      `./scripts/discord.sh react "$DISCORD_CAPTURE_CHANNEL_ID" "$MSG_ID"`.
      Low-confidence `done:`/`drop:` matches → Outcome `Needs Review`, no guessing.
-2. **Calendar.** Today's events from every connected Google Calendar (personal account;
+2. **121 action-point ingestion** (scheduled run only — skip entirely on an on-demand run,
+   and on a rerun where step 0 found the scheduled run ID's Journal page already existed).
+   Per `CLAUDE.md → ## 121 action-point ingestion`: walk CSD EL Direct Reports with
+   `./scripts/notion.sh get-blocks`, extract bullets under an Action-points heading, and
+   `./scripts/notion.sh create` a deduped `Inbox`/`Work` Task per **new** action
+   (`Source ID` `{page-id}#{bullet-key}`, dedupe by querying Tasks for
+   `Source ID starts_with "{page-id}#"`). Collect the newly-created actions for the
+   `🗂 New from 1:1s` section (step 9's compose). On **any** read failure: create nothing,
+   add `⚠️ couldn't reach CSD EL 1:1 notes` (rule #1). In `FIXTURE_MODE` read the walk,
+   page blocks, and existing Source IDs from the fixtures (`tests/fixtures/README.md`
+   mapping) and list each `create` under "Would write:".
+3. **Calendar.** Today's events from every connected Google Calendar (personal account;
    plus the shared work calendar if that fallback is live). List chronologically with
    times; note gaps ≥ 45 min between 09:00–18:00. For work meetings, context may be
    pulled from `CSD EL` sub-pages — **read-only** — when a one-liner would help.
-3. **Tasks.** Rolling list = `notion.sh query` on the Tasks data source with filter
+4. **Tasks.** Rolling list = `notion.sh query` on the Tasks data source with filter
    Status ∈ {Next, In progress, Waiting} (or-group of selects), then drop rows whose
    Snoozed Until is after TODAY. Pick the **top 3** by: overdue/due-today first, then
    Priority (High→Low), then age (days since Last Touched, fallback Created; oldest
    first). Everything else gets one line each.
-4. **Email.** From Gmail: inbox messages that need a reply; explicit deadlines spotted;
+5. **Email.** From Gmail: inbox messages that need a reply; explicit deadlines spotted;
    waiting-on = my sent mail from the last 7 days with no reply on the thread.
-5. **GitHub.** If CLAUDE.md's allowlist is pending or `GH_TOKEN` is absent: one line —
+6. **GitHub.** If CLAUDE.md's allowlist is pending or `GH_TOKEN` is absent: one line —
    "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration, not an
    outage. Otherwise, for each allowlisted repo ONLY:
    - `gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
    - `gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
    - CI failed overnight = my open PRs with any `statusCheckRollup` conclusion `FAILURE`.
-6. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
+7. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
    progress`) whose age > 14 days → ⏳ with age in days.
-7. **Decisions needed.** Capture Log rows with Outcome `Needs Review` that are still
+8. **Decisions needed.** Capture Log rows with Outcome `Needs Review` that are still
    unresolved, plus anything else awaiting Stanton's call.
-8. **Compose, deliver, journal.**
+9. **Compose, deliver, journal.**
    - Compose exactly per `CLAUDE.md → ## Briefing formats → Morning`. Omit empty
      sections. One ⚠️ line at the bottom per unreachable service.
    - Deliver per mode (stdin pipe into `discord.sh`).
    - Write the full delivered text to the Journal page (title = run ID, Date = TODAY,
      Type = `Morning`) via the connector — **even if Discord delivery failed**.
-9. **Individual reminder notifications** (CLAUDE.md → Discord → individual reminder
+10. **Individual reminder notifications** (CLAUDE.md → Discord → individual reminder
    notifications). Skip this step entirely for an **on-demand** run, or if step 0 found
    the scheduled run ID's Journal page already existed (this is a rerun — the reminder
    DMs already went out earlier today).
-   - **Query the reminder set directly** — do **not** reuse step 3's rolling list, which
+   - **Query the reminder set directly** — do **not** reuse step 4's rolling list, which
      omits `Inbox` tasks (a freshly captured task due today can sit in `Inbox`). Run one
      `notion.sh query` on the Tasks data source for every non-`Done`/`Dropped` task that
      is due on/before today or waking today (substitute the real `$TODAY`):
@@ -118,3 +129,5 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 - Read GitHub repos outside the allowlist.
 - List tasks from search results — exhaustive reads come from `notion.sh query` only.
 - Re-fire individual reminder DMs on an on-demand run or on a rerun of the scheduled run.
+- Write, append to, rename, or mark CSD EL — the 121 ingestion is strictly read-only there.
+- Run 121 ingestion on an on-demand run, or re-create ingested actions on a rerun (Source-ID dedupe must hold).

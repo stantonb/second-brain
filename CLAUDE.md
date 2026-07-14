@@ -113,7 +113,7 @@ Properties on the Tasks database (created in Stage 2):
 | Last Rolled Over | date | set by the evening run |
 | Last Touched | date | any brain- or capture-driven update |
 | Source | text | human-readable origin |
-| Source ID | text | dedupe key: Discord message ID, Gmail message ID, GitHub PR URL, or `manual` |
+| Source ID | text | dedupe key: Discord message ID, Gmail message ID, GitHub PR URL, `manual`, or `{page-id}#{bullet-key}` for a Task ingested from a CSD EL 121 page (Stage 12) |
 
 **Rolling list** = Status ∈ {`Next`, `In progress`, `Waiting`}, excluding tasks whose
 Snoozed Until is after today. Rollover state lives in these properties, updated by the
@@ -162,6 +162,67 @@ Every processed capture gets a Capture Log row (Message ID, Raw Text, Processed 
 Outcome, Confidence, Link) **then** a ✅ reaction, and is counted in the next briefing
 ("Captured: 3 tasks, 1 link").
 
+## 121 action-point ingestion (Notion pull)
+
+*(Phase 2 item 7 — Stage 12. The **sole** meeting-notes → Tasks path; the `meeting:` push
+model, item 4 / Stage 9, was skipped 2026-07-14.)*
+
+The **scheduled** morning run (`morning-{TODAY}`, no `ON_DEMAND`, first run of the day)
+pulls action points from Stanton's 1:1 notes in **read-only** CSD EL and files them as
+Tasks. It **never** runs on an on-demand brief-me or on a rerun, and it **never writes,
+appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source ID).
+
+- **Source pages.** 1:1 notes are child pages titled `DDMMYYYY - 121` under
+  `CSD EL → Direct Reports → {person} → {year}`. The Direct Reports page ID is in the
+  workspace map. Discovery is a **scoped tree-walk** via `scripts/notion.sh get-blocks`:
+  Direct Reports → each person (`child_page`) → the **current-year** page (`child_page`
+  whose title is the current Europe/London year) → `child_page`s whose title matches
+  `^\d{8} - 121$`. Only the current-year folder is scanned — **known limitation:** a 121
+  filed under the previous year in early January is not picked up (acceptable at this
+  volume). Nothing outside the Direct Reports subtree is ever read.
+- **Extraction.** For each 121 page, `get-blocks` the page and find the first heading
+  (`heading_1/2/3`) whose trimmed plain text is `Action points` or `Actions`
+  (case-insensitive). Ingest the `bulleted_list_item`/`numbered_list_item` blocks that
+  follow it, up to the next heading (any level) or the end of the page. Only **top-level**
+  list items become actions; a bullet's nested children (fetched with another
+  `get-blocks` when `has_children` is `true`) are folded into that action as detail. A
+  page with **no** Action-points heading is **skipped by design** — no task, no error.
+- **One action → one Task** via `scripts/notion.sh create` on the Tasks data source:
+  - `Name` = the bullet's text; nested detail appended as ` — {child}; {child}`.
+  - `Domain` = `Work`; `Status` = `Inbox`; `Priority` = left blank.
+  - `Project/Area` = the direct report's name (the `{person}` folder; the select option is
+    created on first write).
+  - `Due` = set **only** if the bullet states a deadline, resolved from the **121 page's
+    own date** (parsed from its `DDMMYYYY` title), Europe/London — e.g. "by Friday" on a
+    `07072026` page → `2026-07-10`. No stated deadline → `Due` blank.
+  - `Source` = `1:1 with {person}, {D Mon YYYY}` (the page's date).
+  - `Source ID` = `{page-id}#{bullet-key}` (below).
+- **bullet-key (stable dedupe).** `{bullet-key}` = the first 12 hex chars of the SHA-256
+  of the **normalised** bullet text (normalisation = lowercase → collapse each run of
+  whitespace to one space → strip leading/trailing spaces). Canonical command — must stay
+  **byte-identical every run**, or dedupe breaks:
+
+  ```bash
+  key=$(printf '%s' "$text" \
+    | tr '[:upper:]' '[:lower:]' | tr -s '[:space:]' ' ' | sed 's/^ *//; s/ *$//' \
+    | { command -v sha256sum >/dev/null && sha256sum || shasum -a 256; } \
+    | cut -c1-12)
+  ```
+
+  Position-independent: reordering bullets or editing *other* bullets never changes a key.
+  Editing a bullet's own wording yields a new key → a new task, leaving the old one for
+  manual triage (never a silent loss). Two identical bullets collapse to one task.
+- **Dedupe.** Before creating, read the page's existing Source IDs:
+  `scripts/notion.sh query <tasks-ds> '{"property":"Source ID","rich_text":{"starts_with":"{page-id}#"}}'`.
+  Skip any bullet whose `{page-id}#{bullet-key}` already exists. A rerun of the scheduled
+  morning run therefore creates nothing new.
+- **Surfacing.** Actions created **this run** are listed in the morning briefing's
+  `🗂 New from 1:1s` section (Inbox tasks don't appear in the Top-3/rolling list). Omit the
+  section when nothing new was ingested.
+- **Rule #1.** If any CSD EL read fails (token lacks access, API error), create **nothing**
+  and add `⚠️ couldn't reach CSD EL 1:1 notes` at the bottom of the briefing — never fail
+  silent, never partially ingest a page.
+
 ## Briefing formats
 
 Omit a section entirely when it has no content. `⚠️ couldn't reach <service>` lines go
@@ -202,6 +263,9 @@ Unprefixed events: include.
 - Needs your review: {repo}#{n} {title}
 - Yours: {repo}#{n} — {CI/review state}
 - CI failed overnight: {repo}#{n}
+
+**🗂 New from 1:1s**   (ingested action points — triage into the rolling list)
+- {task} — 1:1 with {person} ({DD Mon})
 
 **❓ Decisions needed**
 - "{raw capture}" — reply `done: …` / `drop: …` / tell me what it is
