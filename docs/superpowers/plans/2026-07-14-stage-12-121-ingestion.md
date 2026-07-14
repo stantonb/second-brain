@@ -545,6 +545,17 @@ git add -A
 git commit -m "fix: Stage 12 live dry-run adjustments" --allow-empty
 ```
 
+> **DONE 2026-07-14.** Live read of real 121 pages contradicted the fictional fixture
+> (heading `Action Items` not `Action points`; `to_do` blocks not bullets;
+> assignee-prefixed; `(carried over)`; a `Follow-ups` section) — **STOPPED and asked
+> Stanton** (Tasks 3–5 contract/fixtures rewritten to match; spec item-7 dated note;
+> commits `2558721`, `b682591`). Stanton chose the **full backfill**: 50 real Task rows
+> created across all 6 reports' 2026 1:1s (Dzmitry 17, Usha 12, David 11, Andrew 5,
+> Ben 5, Mitch 0), his actions only, deduped, `Due` set only on clear deadlines.
+> A harness-only bug created 6 `null` tasks (missing empty-page guard — the *contract*
+> is correct); all 6 archived. **Idempotency proven** (re-run created 0). **CSD EL
+> untouched** (Direct Reports + a 121 page `last_edited_time` identical before/after).
+
 ---
 
 ### Task 7: ✋ CHECKPOINT — 121 ingestion verified, production go
