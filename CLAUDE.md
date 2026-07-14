@@ -203,7 +203,9 @@ writes, appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source
   report's own to-dos never land on Stanton's list.
 - **Cleanup before use.** From the kept item's text, also strip a trailing `(carried over)`
   marker (case-insensitive, any surrounding spaces) — it is provenance, not part of the
-  task. The result is the **action text**.
+  task. The result is the **action text**. Then **skip the item entirely** if that action
+  text is empty or a placeholder (`None`/`N/A`, case-insensitive) — a section reading only
+  "None" produces no task.
 - **One action → one Task** via `scripts/notion.sh create` on the Tasks data source:
   - `Name` = the action text; nested detail appended as ` — {child}; {child}`.
   - `Domain` = `Work`; `Status` = `Inbox`; `Priority` = left blank.
