@@ -21,6 +21,8 @@ Mapping used by skills in fixture mode:
 | CSD EL 121 discovery walk (Stage 12) | `notion/csd-el-121-tree.json` |
 | CSD EL 121 page blocks — `get-blocks` (Stage 12) | `notion/csd-el-121-blocks.json` (keyed by page/block id) |
 | Tasks Source-ID dedupe set for 121 ingestion (Stage 12) | `notion/tasks-121-existing.json` |
+| Reaction-poll watch set (Tasks with a non-empty `Reminder Message ID`, Status ∉ Done/Dropped) | `notion/tasks-reminder-watch.json` |
+| Reactions on reminder DMs — `discord.sh reactors` | `discord/reminder-reactions.json` (keyed by message id → emoji → reactor user ids; the `STANTON` sentinel = `$DISCORD_USER_ID`; affirmative allowlist ✅/👍) |
 
 Dates inside fixtures are fixed (early July 2026); age-dependent assertions are written
 as "older than 14 days", which stays true at any later run date.
