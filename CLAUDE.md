@@ -114,6 +114,7 @@ Properties on the Tasks database (created in Stage 2):
 | Last Touched | date | any brain- or capture-driven update |
 | Source | text | human-readable origin |
 | Source ID | text | dedupe key: Discord message ID, Gmail message ID, GitHub PR URL, `manual`, or `121:{person}#{bullet-key}` for a Task ingested from a CSD EL 121 page (Stage 12, content-based) |
+| Reminder Message ID | text | Discord message ID of the most recent individual reminder DM for this task; polled by the morning/evening run for an affirmative reaction (✅/👍) from Stanton to auto-complete |
 
 **Rolling list** = Status ∈ {`Next`, `In progress`, `Waiting`}, excluding tasks whose
 Snoozed Until is after today. Rollover state lives in these properties, updated by the
@@ -396,6 +397,21 @@ back to `GH_TOKEN`.)*
   updated briefing DM repeats). Follows the same channel routing as the briefing
   itself: `#test` under `DRY_RUN=1`, listed under "Would send:" under
   `FIXTURE_MODE=1`, real DM otherwise.
+- **Reaction-to-complete** *(2026-07-15)*: Stanton can mark a task done by reacting to
+  its individual reminder DM with an affirmative emoji — the allowlist is **✅ or 👍**.
+  When the scheduled morning run sends a reminder DM (above), it stores that DM's message
+  ID on the task (`Reminder Message ID`). The **morning and evening** runs then poll the
+  watch set — tasks with a non-empty `Reminder Message ID` and Status ∉ {Done, Dropped} —
+  and, for each, check that stored message for an affirmative reaction from
+  `DISCORD_USER_ID` via `scripts/discord.sh dm-channel` + `reactors`. A match marks the
+  task **Done** (Completed + Last Touched = the poll date, Europe/London — Discord's
+  reaction API carries no timestamp). The mapping is explicit (message ID → exact task),
+  so there is **no** fuzzy match and **no** `Needs Review` gate, unlike a `done:` capture.
+  Only individual reminder DMs are reactable; the batched briefing is not. Known limits:
+  only the **latest** reminder message per task is watched (a reaction on a superseded
+  older DM is missed), and pickup is at the next run, not live. On any reaction-check
+  failure the run adds `⚠️ couldn't check reminder reactions` and never fails silent. The
+  reminder send uses `scripts/discord.sh send-reminder` (returns the message ID).
 
 ## Secrets
 
