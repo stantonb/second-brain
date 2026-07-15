@@ -355,6 +355,13 @@ match. `scripts/check-env.sh` parses the bullets — keep the exact `- owner/rep
 repos by choice; work repos may be added later. Until then the briefing's GitHub
 section covers exactly these four.)*
 
+*(2026-07-15: on the cloud host, `gh`/API calls via `GH_TOKEN` behave as if scoped to the
+single bound repo (`second-brain`) — a platform-provided credential — so the other three
+repos ⚠️'d. Fix: the PAT is stored as **`GH_PAT`** and `scripts/gh-token.sh` (sourced by
+`check-env.sh` and the morning skill's GitHub step) exports `GH_TOKEN=$GH_PAT` so our PAT
+always wins. Locally, where only `GH_TOKEN` is set, nothing changes — `GH_PAT` unset falls
+back to `GH_TOKEN`.)*
+
 ## Discord
 
 - All Discord I/O goes through `scripts/discord.sh` (429/Retry-After, 2000-char splits).
@@ -393,5 +400,6 @@ section covers exactly these four.)*
 ## Secrets
 
 `DISCORD_BOT_TOKEN`, `DISCORD_USER_ID`, `DISCORD_CAPTURE_CHANNEL_ID`,
-`DISCORD_TEST_CHANNEL_ID`, `GH_TOKEN` — environment variables only. Never commit,
+`DISCORD_TEST_CHANNEL_ID`, `GH_PAT` (the fine-grained GitHub PAT — `GH_TOKEN` still works
+locally as a fallback), `NOTION_TOKEN` — environment variables only. Never commit,
 print, or log them.

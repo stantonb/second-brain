@@ -43,7 +43,9 @@ Everything a human must click to stand up the second brain. Machine-side validat
    - Repository access: **Only select repositories** → pick exactly the allowlist repos.
    - Repository permissions: **Pull requests: Read-only**, **Contents: Read-only**,
      **Actions: Read-only** (CI status). Metadata: Read-only is added automatically.
-3. **Generate token** → copy → `GH_TOKEN` (store per §4).
+3. **Generate token** → copy → `GH_PAT` (store per §4). *(Stored as `GH_PAT`, not
+   `GH_TOKEN`: the cloud host provides its own repo-scoped `GH_TOKEN`; `scripts/gh-token.sh`
+   prefers `GH_PAT` so our PAT wins — see §6 and CLAUDE.md's GitHub allowlist note.)*
 
 ## 3. claude.ai connectors
 
@@ -94,7 +96,7 @@ export DISCORD_BOT_TOKEN='...'
 export DISCORD_USER_ID='...'
 export DISCORD_CAPTURE_CHANNEL_ID='...'
 export DISCORD_TEST_CHANNEL_ID='...'
-export GH_TOKEN='...'
+export GH_PAT='...'
 export NOTION_TOKEN='...'
 EOF
 chmod 600 ~/.config/second-brain/env
@@ -116,7 +118,11 @@ Every line must be ✅ before Stage 1 starts.
 
 At claude.ai → Claude Code → this repo's cloud environment:
 - Network access: **Custom** → default allowlist **plus `discord.com` and `api.notion.com`**.
-- Environment variables: the six from §4.
+- Environment variables: the six from §4. **Store the GitHub PAT as `GH_PAT`** (not
+  `GH_TOKEN`): the cloud host exposes its own repo-scoped `GH_TOKEN` that sees only the
+  bound repo, so `scripts/gh-token.sh` exports `GH_TOKEN=$GH_PAT` to keep every allowlisted
+  repo visible *(2026-07-15 fix)*. Verify in a cloud session: `./scripts/check-env.sh`
+  should report `effective token type: fine-grained PAT` and see all four repos.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.
 Exact steps live in the Stage 3 plan.
 

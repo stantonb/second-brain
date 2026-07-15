@@ -9,6 +9,10 @@
 # NEVER prints secret values.
 set -uo pipefail
 
+# Effective GitHub token: prefer GH_PAT over any platform-injected/repo-scoped GH_TOKEN
+# (see scripts/gh-token.sh). Local runs with only GH_TOKEN set are unaffected.
+source "$(dirname "$0")/gh-token.sh"
+
 PASS=0 FAIL=0
 ok()   { printf '  ✅ %s\n' "$1"; PASS=$((PASS+1)); }
 bad()  { printf '  ❌ %s\n' "$1"; FAIL=$((FAIL+1)); }
@@ -22,9 +26,12 @@ dcode() {
 }
 
 echo "Env vars:"
-for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID GH_TOKEN NOTION_TOKEN; do
+for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID NOTION_TOKEN; do
   if [[ -n "${!var:-}" ]]; then ok "$var is set"; else bad "$var is missing"; fi
 done
+if [[ -n "${GH_PAT:-}" ]]; then ok "GitHub token is set (from GH_PAT)"
+elif [[ -n "${GH_TOKEN:-}" ]]; then ok "GitHub token is set (GH_TOKEN)"
+else bad "GitHub token missing (set GH_PAT to your fine-grained PAT)"; fi
 
 echo "Discord:"
 if [[ -n "${DISCORD_BOT_TOKEN:-}" ]]; then
@@ -52,6 +59,7 @@ fi
 
 echo "GitHub:"
 if [[ -n "${GH_TOKEN:-}" ]]; then
+  note "effective token type: $(gh_token_kind)"
   code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/user)
   if [[ $code == 200 ]]; then ok "GH_TOKEN valid (GET /user → 200)"; else bad "GH_TOKEN rejected (GET /user → $code)"; fi
   if [[ -f CLAUDE.md ]]; then

@@ -77,7 +77,10 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    first). Everything else gets one line each.
 5. **Email.** From Gmail: inbox messages that need a reply; explicit deadlines spotted;
    waiting-on = my sent mail from the last 7 days with no reply on the thread.
-6. **GitHub.** If CLAUDE.md's allowlist is pending or `GH_TOKEN` is absent: one line —
+6. **GitHub.** First `source ./scripts/gh-token.sh` so `gh` authenticates with our PAT
+   (`GH_PAT`); the cloud host otherwise exposes a repo-scoped `GH_TOKEN` that sees only
+   `second-brain` and would ⚠️ every other allowlisted repo. If CLAUDE.md's allowlist is
+   pending or no GitHub token (`GH_PAT`/`GH_TOKEN`) is set: one line —
    "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration, not an
    outage. Otherwise, for each allowlisted repo ONLY:
    - `gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
