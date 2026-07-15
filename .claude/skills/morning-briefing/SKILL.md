@@ -53,6 +53,40 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
      Raw Text, Processed At = now, Outcome, Confidence, Link) →
      `./scripts/discord.sh react "$DISCORD_CAPTURE_CHANNEL_ID" "$MSG_ID"`.
      Low-confidence `done:`/`drop:` matches → Outcome `Needs Review`, no guessing.
+1b. **Poll reminder reactions → complete tasks** (both scheduled and on-demand runs;
+   `CLAUDE.md → Discord → Reaction-to-complete`). Marks tasks Stanton completed by reacting
+   to a reminder DM, so they drop off the rolling list and don't re-nag. Run this **before**
+   the Tasks step (4) and the reminder step (10).
+   - **Watch set:** `./scripts/notion.sh query <tasks-ds>` (data-source id in CLAUDE.md) with
+
+     ```json
+     {"and":[
+       {"property":"Reminder Message ID","rich_text":{"is_not_empty":true}},
+       {"property":"Status","select":{"does_not_equal":"Done"}},
+       {"property":"Status","select":{"does_not_equal":"Dropped"}}
+     ]}
+     ```
+
+   - **Channel:** production → `CH=$(./scripts/discord.sh dm-channel)`; `DRY_RUN=1` →
+     `CH=$DISCORD_TEST_CHANNEL_ID` (reminders were sent there); `FIXTURE_MODE=1` → read
+     `tests/fixtures/discord/reminder-reactions.json` and the watch set from
+     `tests/fixtures/notion/tasks-reminder-watch.json`, treating the `STANTON` sentinel as
+     `$DISCORD_USER_ID` — no Discord/Notion calls.
+   - For each watched task, `AFFIRMED=$(./scripts/discord.sh reactors "$CH" "$MSGID" ✅ 👍)`.
+     If `$DISCORD_USER_ID` is in that array, mark the task **Done** via
+     `./scripts/notion.sh set-props <page-id>`:
+
+     ```json
+     {"Status":{"select":{"name":"Done"}},
+      "Completed":{"date":{"start":"$TODAY"}},
+      "Last Touched":{"date":{"start":"$TODAY"}}}
+     ```
+
+   - The morning format has **no** Done-today section, so reaction-completed tasks simply
+     leave the rolling list — no separate line (evening reports same-day ones).
+   - **Rule #1:** if `dm-channel` or any `reactors` call fails, do **not** abort — finish the
+     run and add `⚠️ couldn't check reminder reactions` at the bottom of the briefing. In
+     `FIXTURE_MODE`, list each completion `set-props` under "Would write:".
 2. **121 action-point ingestion** (scheduled run only — skip entirely on an on-demand run,
    and on a rerun where step 0 found the scheduled run ID's Journal page already existed).
    Per `CLAUDE.md → ## 121 action-point ingestion`: walk CSD EL Direct Reports with
@@ -122,9 +156,17 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
      - `Due` before `$TODAY` → `⏰ Overdue: {name} (due {Ddd D Mon})`
      - `Due` = `$TODAY` → `⏰ Due today: {name}`
      - else (`Snoozed Until` = `$TODAY`) → `⏰ Back from snooze: {name}`
-     - Production: `printf '%s' "$MSG" | ./scripts/discord.sh send-dm`.
-     - `DRY_RUN=1`: `printf '%s' "$MSG" | ./scripts/discord.sh send-channel "$DISCORD_TEST_CHANNEL_ID"`.
-     - `FIXTURE_MODE=1`: no send — list each message under "Would send:".
+     - Production: `MID=$(printf '%s' "$MSG" | ./scripts/discord.sh send-reminder)`.
+     - `DRY_RUN=1`: `MID=$(printf '%s' "$MSG" | ./scripts/discord.sh send-reminder "$DISCORD_TEST_CHANNEL_ID")`.
+     - `FIXTURE_MODE=1`: no send — list each message under "Would send:" (no message id).
+     - After a real send (production or `DRY_RUN`), store the returned id on the task so the
+       reaction poll (step 1b) can watch it — one `set-props` per reminder:
+
+       ```json
+       {"Reminder Message ID":{"rich_text":[{"text":{"content":"$MID"}}]}}
+       ```
+
+       In `FIXTURE_MODE`, list this `set-props` under "Would write:" instead.
 
 ## Never
 
