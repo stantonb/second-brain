@@ -156,6 +156,21 @@ react() {
   discord_api PUT "/channels/$channel_id/messages/$message_id/reactions/$encoded/@me" '' > /dev/null
 }
 
+# reactors CHANNEL_ID MESSAGE_ID [EMOJI...] — prints a JSON array of the deduped user
+# ids that reacted with any listed emoji (default ✅ 👍). One GET per emoji.
+reactors() {
+  local channel_id=$1 message_id=$2; shift 2
+  local emojis=("$@") users='[]' e encoded resp
+  (( ${#emojis[@]} )) || emojis=(✅ 👍)
+  for e in "${emojis[@]}"; do
+    encoded=$(jq -rn --arg x "$e" '$x | @uri')
+    resp=$(discord_api GET \
+      "/channels/$channel_id/messages/$message_id/reactions/$encoded?limit=100") || return 1
+    users=$(jq -s '(.[0] + [.[1][].id]) | unique' <<<"$users$resp")
+  done
+  printf '%s\n' "$users"
+}
+
 usage() {
   cat >&2 <<'EOF'
 usage: discord.sh <command>
@@ -165,6 +180,7 @@ usage: discord.sh <command>
   send-reminder [channel_id]               send ONE message (text on stdin); print its id
   fetch-captures <channel_id> [after_id]   full history as JSON, oldest first
   react <channel_id> <message_id> [emoji]  add reaction (default ✅)
+  reactors <channel_id> <message_id> [emoji...]  user-ids that reacted (default ✅ 👍)
 EOF
   exit 2
 }
@@ -179,6 +195,7 @@ main() {
     send-reminder)  send_reminder "${1:-}" ;;
     fetch-captures) fetch_captures "${1:?usage: discord.sh fetch-captures <channel_id> [after_id]}" "${2:-0}" ;;
     react)          react "${1:?channel_id required}" "${2:?message_id required}" "${3:-✅}" ;;
+    reactors)       reactors "${1:?channel_id required}" "${2:?message_id required}" "${@:3}" ;;
     *)              usage ;;
   esac
 }
