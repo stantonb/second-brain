@@ -32,6 +32,37 @@ teardown() { teardown_discord; }
   [ "$(grep -c '%E2%9C%85' "$CURL_STUB_DIR/calls.log")" = "1" ]
 }
 
+@test "dm_channel opens the DM channel and prints its id" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{"id":"DM1"}' > "$CURL_STUB_DIR/1.body"
+  export DISCORD_USER_ID='111111111111111111'
+  run dm_channel
+  [ "$status" -eq 0 ]
+  [ "$output" = "DM1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/users/@me/channels')" = "1" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.recipient_id')" = "111111111111111111" ]
+}
+
+@test "send_reminder to a channel posts one message and prints its id" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{"id":"MSG777"}' > "$CURL_STUB_DIR/1.body"
+  output=$(printf '⏰ Due today: Foo' | send_reminder 555); status=$?
+  [ "$status" -eq 0 ]
+  [ "$output" = "MSG777" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/channels/555/messages')" = "1" ]
+  [ "$(grep -c '/users/@me/channels' "$CURL_STUB_DIR/calls.log")" = "0" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/payloads.log" | jq -r '.content')" = "⏰ Due today: Foo" ]
+}
+
+@test "send_reminder with no channel opens the DM then posts, printing the id" {
+  echo 200 > "$CURL_STUB_DIR/1.code"; printf '{"id":"DM1"}'   > "$CURL_STUB_DIR/1.body"
+  echo 200 > "$CURL_STUB_DIR/2.code"; printf '{"id":"MSG42"}' > "$CURL_STUB_DIR/2.body"
+  export DISCORD_USER_ID='111111111111111111'
+  output=$(printf 'hi' | send_reminder); status=$?
+  [ "$status" -eq 0 ]
+  [ "$output" = "MSG42" ]
+  [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c '/users/@me/channels')" = "1" ]
+  [ "$(sed -n '2p' "$CURL_STUB_DIR/calls.log" | grep -c '/channels/DM1/messages')" = "1" ]
+}
+
 @test "CLI: unknown command prints usage and exits 2" {
   run bash scripts/discord.sh bogus
   [ "$status" -eq 2 ]

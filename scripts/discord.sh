@@ -127,12 +127,26 @@ send_channel() {
   rm -rf "$dir"
 }
 
+# dm_channel — prints the DM channel id for $DISCORD_USER_ID (opens/reuses it).
+dm_channel() {
+  discord_api POST '/users/@me/channels' \
+    "{\"recipient_id\":\"$DISCORD_USER_ID\"}" | jq -r '.id'
+}
+
 # send_dm — stdin → DM to $DISCORD_USER_ID (opens/reuses the DM channel).
 send_dm() {
-  local dm_channel
-  dm_channel=$(discord_api POST '/users/@me/channels' \
-    "{\"recipient_id\":\"$DISCORD_USER_ID\"}" | jq -r '.id')
-  send_channel "$dm_channel"
+  send_channel "$(dm_channel)"
+}
+
+# send_reminder [CHANNEL_ID] — stdin → ONE POST (no chunking); prints the created
+# message id. No CHANNEL_ID → the DM channel. Used for individual reminder DMs whose
+# id must be stored on the task for reaction-to-complete.
+send_reminder() {
+  local channel_id=${1:-} content payload
+  content=$(cat)
+  [[ -n $channel_id ]] || channel_id=$(dm_channel)
+  payload=$(printf '%s' "$content" | jq -c -Rs '{content: .}')
+  discord_api POST "/channels/$channel_id/messages" "$payload" | jq -r '.id'
 }
 
 # react CHANNEL_ID MESSAGE_ID [EMOJI] — default ✅. Empty body → Content-Length: 0.
@@ -147,6 +161,8 @@ usage() {
 usage: discord.sh <command>
   send-dm                                  DM $DISCORD_USER_ID (text on stdin)
   send-channel <channel_id>                post to channel (text on stdin)
+  dm-channel                               print the DM channel id for $DISCORD_USER_ID
+  send-reminder [channel_id]               send ONE message (text on stdin); print its id
   fetch-captures <channel_id> [after_id]   full history as JSON, oldest first
   react <channel_id> <message_id> [emoji]  add reaction (default ✅)
 EOF
@@ -159,6 +175,8 @@ main() {
   case $cmd in
     send-dm)        : "${DISCORD_USER_ID:?DISCORD_USER_ID must be set}"; send_dm ;;
     send-channel)   send_channel "${1:?usage: discord.sh send-channel <channel_id>}" ;;
+    dm-channel)     : "${DISCORD_USER_ID:?DISCORD_USER_ID must be set}"; dm_channel ;;
+    send-reminder)  send_reminder "${1:-}" ;;
     fetch-captures) fetch_captures "${1:?usage: discord.sh fetch-captures <channel_id> [after_id]}" "${2:-0}" ;;
     react)          react "${1:?channel_id required}" "${2:?message_id required}" "${3:-✅}" ;;
     *)              usage ;;
