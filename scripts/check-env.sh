@@ -68,10 +68,12 @@ if [[ -n "${GH_TOKEN:-}" ]]; then
       note "no allowlist entries in CLAUDE.md yet"
     else
       while IFS= read -r repo; do
-        if gh repo view "$repo" --json name >/dev/null 2>&1; then
+        code=$(curl -s -o /dev/null -w '%{http_code}' \
+          -H "Authorization: Bearer $(gh_token_for "$repo")" "https://api.github.com/repos/$repo")
+        if [[ $code == 200 ]]; then
           ok "PAT can see $repo"
         else
-          bad "PAT cannot see $repo (missing from the fine-grained token's repo list?)"
+          bad "PAT cannot see $repo (→ $code — grant it on the PAT; a repo owned by another user/org needs its own GH_PAT_<OWNER> token)"
         fi
       done <<< "$repos"
     fi

@@ -117,9 +117,11 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    `second-brain` and would ⚠️ every other allowlisted repo. If CLAUDE.md's allowlist is
    pending or no GitHub token (`GH_PAT`/`GH_TOKEN`) is set: one line —
    "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration, not an
-   outage. Otherwise, for each allowlisted repo ONLY:
-   - `gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
-   - `gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
+   outage. Otherwise, for each allowlisted repo ONLY — resolving the token per repo,
+   because a repo owned by another user/org needs its own `GH_PAT_<OWNER>` PAT
+   (fine-grained PATs are single-owner; `gh_token_for` picks the right one):
+   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
+   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
    - CI failed overnight = my open PRs with any `statusCheckRollup` conclusion `FAILURE`.
 7. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
    progress`) whose age > 14 days → ⏳ with age in days.

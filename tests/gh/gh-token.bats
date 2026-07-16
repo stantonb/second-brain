@@ -34,3 +34,15 @@ SCRIPT="$BATS_TEST_DIRNAME/../../scripts/gh-token.sh"
   [ "$status" -eq 0 ]
   [[ "$output" != *"SUPERSECRET"* ]]
 }
+
+@test "gh_token_for prefers a per-owner GH_PAT_<OWNER> override" {
+  run bash -c "export GH_TOKEN='github_pat_default' GH_PAT_LIKENESS_MARKET='github_pat_org'; source '$SCRIPT'; gh_token_for 'Likeness-Market/MarketPlace'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "github_pat_org" ]
+}
+
+@test "gh_token_for falls back to the effective GH_TOKEN when no per-owner override exists" {
+  run bash -c "unset GH_PAT; export GH_TOKEN='github_pat_default'; source '$SCRIPT'; gh_token_for 'stantonb/second-brain'"
+  [ "$status" -eq 0 ]
+  [ "$output" = "github_pat_default" ]
+}
