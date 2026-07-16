@@ -12,13 +12,19 @@
 #   react <channel_id> <message_id> [emoji]  add a reaction (default ✅)
 #   reactors <channel_id> <message_id> [emoji...]  user-ids that reacted (default ✅ 👍)
 #
+# Before each chunk is posted, send_channel checks the target channel's most
+# recent message and skips the send if it's byte-identical and under
+# DEDUPE_WINDOW seconds old — protects against a retried send re-posting the
+# same non-idempotent message twice.
+#
 # Env: DISCORD_BOT_TOKEN (always), DISCORD_USER_ID (send-dm, dm-channel, and
 #      send-reminder's DM fallback), DISCORD_API_BASE (test seam; default
-#      https://discord.com/api/v10).
+#      https://discord.com/api/v10), DISCORD_DEDUPE_WINDOW (default 120).
 
 API_BASE="${DISCORD_API_BASE:-https://discord.com/api/v10}"
 MAX_LEN=2000
 MAX_RETRIES=5
+DEDUPE_WINDOW="${DISCORD_DEDUPE_WINDOW:-120}"
 
 # discord_api METHOD PATH [JSON_BODY] — prints the response body on success.
 # Honors 429 Retry-After (header → JSON body → exponential backoff), MAX_RETRIES cap.
@@ -118,13 +124,33 @@ fetch_captures() {
   printf '%s\n' "$combined"
 }
 
+# recently_duplicate CHANNEL_ID CONTENT — true if the channel's most recent
+# message is byte-identical to CONTENT and was posted within DEDUPE_WINDOW
+# seconds. Guards a retried send (e.g. after a perceived failure that actually
+# succeeded) from re-posting the same non-idempotent message twice.
+recently_duplicate() {
+  local channel_id=$1 content=$2 last ts epoch now
+  last=$(discord_api GET "/channels/$channel_id/messages?limit=1") || return 1
+  [[ $(jq 'length' <<<"$last") -eq 0 ]] && return 1
+  jq -e --arg c "$content" '.[0].content == $c' <<<"$last" > /dev/null || return 1
+  ts=$(jq -r '.[0].timestamp' <<<"$last")
+  epoch=$(date -d "$ts" +%s) || return 1
+  now=$(date +%s)
+  (( now - epoch <= DEDUPE_WINDOW ))
+}
+
 # send_channel CHANNEL_ID — stdin → one or more POSTs (2000-char chunks).
 send_channel() {
-  local channel_id=$1 dir f payload
+  local channel_id=$1 dir f content payload
   dir=$(mktemp -d)
   split_message "$dir"
   for f in "$dir"/chunk-*; do
     [[ -e $f ]] || { echo 'send_channel: empty message — nothing sent' >&2; break; }
+    content=$(cat "$f")
+    if recently_duplicate "$channel_id" "$content"; then
+      echo "send_channel: identical message already posted in the last ${DEDUPE_WINDOW}s — skipping duplicate send" >&2
+      continue
+    fi
     payload=$(jq -c -Rs '{content: .}' "$f")
     discord_api POST "/channels/$channel_id/messages" "$payload" > /dev/null || { rm -rf "$dir"; return 1; }
   done
