@@ -159,14 +159,18 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
      - Production: `MID=$(printf '%s' "$MSG" | ./scripts/discord.sh send-reminder)`.
      - `DRY_RUN=1`: `MID=$(printf '%s' "$MSG" | ./scripts/discord.sh send-reminder "$DISCORD_TEST_CHANNEL_ID")`.
      - `FIXTURE_MODE=1`: no send — list each message under "Would send:" (no message id).
-     - After a real send (production or `DRY_RUN`), store the returned id on the task so the
-       reaction poll (step 1b) can watch it — one `set-props` per reminder:
+     - After a real send (production or `DRY_RUN`) that **succeeded** (`send-reminder`
+       exited 0 and `$MID` is non-empty), store the returned id on the task so the reaction
+       poll (step 1b) can watch it — one `set-props` per reminder:
 
        ```json
        {"Reminder Message ID":{"rich_text":[{"text":{"content":"$MID"}}]}}
        ```
 
-       In `FIXTURE_MODE`, list this `set-props` under "Would write:" instead.
+       In `FIXTURE_MODE`, list this `set-props` under "Would write:" instead. If a send
+       **fails** (non-zero exit or empty `$MID`), do **not** write a blank id — add
+       `⚠️ couldn't send reminder: {name}` at the bottom of the briefing (rule #1) and
+       carry on with the rest.
 
 ## Never
 
