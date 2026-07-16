@@ -4,19 +4,22 @@
 # Commands (message text is read from stdin where applicable):
 #   send-dm                                DM $DISCORD_USER_ID (splits at 2000 chars)
 #   send-channel <channel_id>              post to a channel (same splitting)
+#   dm-channel                             print the DM channel id for $DISCORD_USER_ID
+#   send-reminder [channel_id]             send ONE message (no splitting); print its id
 #   fetch-captures <channel_id> [after_id] full paginated history after <after_id>
 #                                          (default: from the start) as a JSON array,
 #                                          oldest first
 #   react <channel_id> <message_id> [emoji]  add a reaction (default ✅)
+#   reactors <channel_id> <message_id> [emoji...]  user-ids that reacted (default ✅ 👍)
 #
 # Before each chunk is posted, send_channel checks the target channel's most
 # recent message and skips the send if it's byte-identical and under
 # DEDUPE_WINDOW seconds old — protects against a retried send re-posting the
 # same non-idempotent message twice.
 #
-# Env: DISCORD_BOT_TOKEN (always), DISCORD_USER_ID (send-dm),
-#      DISCORD_API_BASE (test seam; default https://discord.com/api/v10),
-#      DISCORD_DEDUPE_WINDOW (default 120).
+# Env: DISCORD_BOT_TOKEN (always), DISCORD_USER_ID (send-dm, dm-channel, and
+#      send-reminder's DM fallback), DISCORD_API_BASE (test seam; default
+#      https://discord.com/api/v10), DISCORD_DEDUPE_WINDOW (default 120).
 
 API_BASE="${DISCORD_API_BASE:-https://discord.com/api/v10}"
 MAX_LEN=2000
@@ -154,12 +157,26 @@ send_channel() {
   rm -rf "$dir"
 }
 
+# dm_channel — prints the DM channel id for $DISCORD_USER_ID (opens/reuses it).
+dm_channel() {
+  discord_api POST '/users/@me/channels' \
+    "{\"recipient_id\":\"$DISCORD_USER_ID\"}" | jq -r '.id'
+}
+
 # send_dm — stdin → DM to $DISCORD_USER_ID (opens/reuses the DM channel).
 send_dm() {
-  local dm_channel
-  dm_channel=$(discord_api POST '/users/@me/channels' \
-    "{\"recipient_id\":\"$DISCORD_USER_ID\"}" | jq -r '.id')
-  send_channel "$dm_channel"
+  send_channel "$(dm_channel)"
+}
+
+# send_reminder [CHANNEL_ID] — stdin → ONE POST (no chunking); prints the created
+# message id. No CHANNEL_ID → the DM channel. Used for individual reminder DMs whose
+# id must be stored on the task for reaction-to-complete.
+send_reminder() {
+  local channel_id=${1:-} content payload
+  content=$(cat)
+  [[ -n $channel_id ]] || channel_id=$(dm_channel)
+  payload=$(printf '%s' "$content" | jq -c -Rs '{content: .}')
+  discord_api POST "/channels/$channel_id/messages" "$payload" | jq -r '.id'
 }
 
 # react CHANNEL_ID MESSAGE_ID [EMOJI] — default ✅. Empty body → Content-Length: 0.
@@ -169,13 +186,31 @@ react() {
   discord_api PUT "/channels/$channel_id/messages/$message_id/reactions/$encoded/@me" '' > /dev/null
 }
 
+# reactors CHANNEL_ID MESSAGE_ID [EMOJI...] — prints a JSON array of the deduped user
+# ids that reacted with any listed emoji (default ✅ 👍). One GET per emoji.
+reactors() {
+  local channel_id=$1 message_id=$2; shift 2
+  local emojis=("$@") users='[]' e encoded resp
+  (( ${#emojis[@]} )) || emojis=(✅ 👍)
+  for e in "${emojis[@]}"; do
+    encoded=$(jq -rn --arg x "$e" '$x | @uri')
+    resp=$(discord_api GET \
+      "/channels/$channel_id/messages/$message_id/reactions/$encoded?limit=100") || return 1
+    users=$(jq -s '(.[0] + [.[1][].id]) | unique' <<<"$users$resp")
+  done
+  printf '%s\n' "$users"
+}
+
 usage() {
   cat >&2 <<'EOF'
 usage: discord.sh <command>
   send-dm                                  DM $DISCORD_USER_ID (text on stdin)
   send-channel <channel_id>                post to channel (text on stdin)
+  dm-channel                               print the DM channel id for $DISCORD_USER_ID
+  send-reminder [channel_id]               send ONE message (text on stdin); print its id
   fetch-captures <channel_id> [after_id]   full history as JSON, oldest first
   react <channel_id> <message_id> [emoji]  add reaction (default ✅)
+  reactors <channel_id> <message_id> [emoji...]  user-ids that reacted (default ✅ 👍)
 EOF
   exit 2
 }
@@ -186,8 +221,11 @@ main() {
   case $cmd in
     send-dm)        : "${DISCORD_USER_ID:?DISCORD_USER_ID must be set}"; send_dm ;;
     send-channel)   send_channel "${1:?usage: discord.sh send-channel <channel_id>}" ;;
+    dm-channel)     : "${DISCORD_USER_ID:?DISCORD_USER_ID must be set}"; dm_channel ;;
+    send-reminder)  send_reminder "${1:-}" ;;
     fetch-captures) fetch_captures "${1:?usage: discord.sh fetch-captures <channel_id> [after_id]}" "${2:-0}" ;;
     react)          react "${1:?channel_id required}" "${2:?message_id required}" "${3:-✅}" ;;
+    reactors)       reactors "${1:?channel_id required}" "${2:?message_id required}" "${@:3}" ;;
     *)              usage ;;
   esac
 }
