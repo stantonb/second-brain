@@ -391,7 +391,7 @@ back to `GH_TOKEN`.)*
     `⏰ Back from snooze: {task name}`
   A task matching more than one bucket gets exactly **one** DM, by precedence
   Overdue → Due today → Snooze wake (a task waking today that is also overdue/due
-  today uses the due-based wording). Each is its own `discord.sh send-dm` call.
+  today uses the due-based wording). Each is its own `discord.sh send-reminder` call.
   Never fires on an on-demand brief-me, and never re-fires on a rerun of the
   scheduled run (the individual DMs already went out earlier that day — only the
   updated briefing DM repeats). Follows the same channel routing as the briefing

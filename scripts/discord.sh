@@ -4,13 +4,17 @@
 # Commands (message text is read from stdin where applicable):
 #   send-dm                                DM $DISCORD_USER_ID (splits at 2000 chars)
 #   send-channel <channel_id>              post to a channel (same splitting)
+#   dm-channel                             print the DM channel id for $DISCORD_USER_ID
+#   send-reminder [channel_id]             send ONE message (no splitting); print its id
 #   fetch-captures <channel_id> [after_id] full paginated history after <after_id>
 #                                          (default: from the start) as a JSON array,
 #                                          oldest first
 #   react <channel_id> <message_id> [emoji]  add a reaction (default ✅)
+#   reactors <channel_id> <message_id> [emoji...]  user-ids that reacted (default ✅ 👍)
 #
-# Env: DISCORD_BOT_TOKEN (always), DISCORD_USER_ID (send-dm),
-#      DISCORD_API_BASE (test seam; default https://discord.com/api/v10).
+# Env: DISCORD_BOT_TOKEN (always), DISCORD_USER_ID (send-dm, dm-channel, and
+#      send-reminder's DM fallback), DISCORD_API_BASE (test seam; default
+#      https://discord.com/api/v10).
 
 API_BASE="${DISCORD_API_BASE:-https://discord.com/api/v10}"
 MAX_LEN=2000
