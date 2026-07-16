@@ -134,7 +134,10 @@ recently_duplicate() {
   [[ $(jq 'length' <<<"$last") -eq 0 ]] && return 1
   jq -e --arg c "$content" '.[0].content == $c' <<<"$last" > /dev/null || return 1
   ts=$(jq -r '.[0].timestamp' <<<"$last")
-  epoch=$(date -d "$ts" +%s) || return 1
+  # Parse Discord's ISO-8601 timestamp with jq rather than `date -d` (GNU-only,
+  # absent on BSD/macOS): drop fractional seconds and normalise a +00:00 offset
+  # to Z so fromdateiso8601 accepts it. Fails safe (→ send) on any parse error.
+  epoch=$(jq -rn --arg t "$ts" '$t | sub("\\.[0-9]+";"") | sub("\\+00:00$";"Z") | fromdateiso8601') || return 1
   now=$(date +%s)
   (( now - epoch <= DEDUPE_WINDOW ))
 }
