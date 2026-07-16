@@ -51,9 +51,10 @@ briefing + "Would write:" list) · `DRY_RUN=1` (live reads + real triage, delive
      ```
 
      Keep the list of task names completed here — step 2 tags them.
-   - **Rule #1:** on any `dm-channel`/`reactors` failure, don't abort — finish the run and add
-     `⚠️ couldn't check reminder reactions` at the bottom. In `FIXTURE_MODE`, list each
-     completion `set-props` under "Would write:".
+   - **Rule #1:** on any watch-set query, `dm-channel`, or `reactors` failure (including a
+     400 from a schema mismatch — say what broke), don't abort — finish the run and add
+     `⚠️ couldn't check reminder reactions — {why}` at the bottom. In `FIXTURE_MODE`, list
+     each completion `set-props` under "Would write:".
 2. **Reconcile completions.** Query Tasks for Status `Done` with empty Completed →
    set Completed = TODAY, Last Touched = TODAY (these are tasks Stanton ticked off in
    Notion himself). "Done today" for the DM = all tasks with Completed = TODAY,
