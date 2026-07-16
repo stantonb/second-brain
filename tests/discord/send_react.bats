@@ -24,6 +24,14 @@ teardown() { teardown_discord; }
   [ "$(cat "$CURL_STUB_DIR/count")" = "1" ]
 }
 
+@test "send_channel dedupe parses Discord's production timestamp format (.NNNNNN+00:00)" {
+  echo 200 > "$CURL_STUB_DIR/1.code"
+  now=$(date -u +%Y-%m-%dT%H:%M:%S.100000+00:00)
+  printf '[{"content":"already sent","timestamp":"%s"}]' "$now" > "$CURL_STUB_DIR/1.body"
+  printf 'already sent' | send_channel 555
+  [ "$(cat "$CURL_STUB_DIR/count")" = "1" ]
+}
+
 @test "send_dm opens the DM channel then posts to it" {
   echo 200 > "$CURL_STUB_DIR/1.code"; printf '{"id":"999000"}' > "$CURL_STUB_DIR/1.body"
   echo 200 > "$CURL_STUB_DIR/2.code"; printf '[]' > "$CURL_STUB_DIR/2.body"        # dedupe check

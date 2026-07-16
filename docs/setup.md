@@ -46,6 +46,12 @@ Everything a human must click to stand up the second brain. Machine-side validat
 3. **Generate token** → copy → `GH_PAT` (store per §4). *(Stored as `GH_PAT`, not
    `GH_TOKEN`: the cloud host provides its own repo-scoped `GH_TOKEN`; `scripts/gh-token.sh`
    prefers `GH_PAT` so our PAT wins — see §6 and CLAUDE.md's GitHub allowlist note.)*
+4. **Cross-owner repos** (e.g. `Likeness-Market/MarketPlace`): a fine-grained PAT has
+   exactly one resource owner, so repeat steps 1–3 with **Resource owner = that org**
+   (the org must permit fine-grained PATs; if it doesn't, that's an org-settings
+   conversation) and store the token as `GH_PAT_<OWNER>` — uppercased, non-alphanumerics
+   → `_`, e.g. `GH_PAT_LIKENESS_MARKET`. `gh_token_for` in `scripts/gh-token.sh` picks it
+   up per repo automatically.
 
 ## 3. claude.ai connectors
 
@@ -97,6 +103,7 @@ export DISCORD_USER_ID='...'
 export DISCORD_CAPTURE_CHANNEL_ID='...'
 export DISCORD_TEST_CHANNEL_ID='...'
 export GH_PAT='...'
+export GH_PAT_LIKENESS_MARKET='...'   # per-owner PAT for cross-owner allowlist repos (§2.4)
 export NOTION_TOKEN='...'
 EOF
 chmod 600 ~/.config/second-brain/env
@@ -118,11 +125,12 @@ Every line must be ✅ before Stage 1 starts.
 
 At claude.ai → Claude Code → this repo's cloud environment:
 - Network access: **Custom** → default allowlist **plus `discord.com` and `api.notion.com`**.
-- Environment variables: the six from §4. **Store the GitHub PAT as `GH_PAT`** (not
-  `GH_TOKEN`): the cloud host exposes its own repo-scoped `GH_TOKEN` that sees only the
-  bound repo, so `scripts/gh-token.sh` exports `GH_TOKEN=$GH_PAT` to keep every allowlisted
-  repo visible *(2026-07-15 fix)*. Verify in a cloud session: `./scripts/check-env.sh`
-  should report `effective token type: fine-grained PAT` and see all four repos.
+- Environment variables: everything in §4's env file, including any `GH_PAT_<OWNER>`
+  tokens. **Store the GitHub PAT as `GH_PAT`** (not `GH_TOKEN`): the cloud host exposes
+  its own repo-scoped `GH_TOKEN` that sees only the bound repo, so `scripts/gh-token.sh`
+  exports `GH_TOKEN=$GH_PAT` to keep every allowlisted repo visible *(2026-07-15 fix)*.
+  Verify in a cloud session: `./scripts/check-env.sh` should report
+  `effective token type: fine-grained PAT` and see every allowlisted repo.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.
 Exact steps live in the Stage 3 plan.
 

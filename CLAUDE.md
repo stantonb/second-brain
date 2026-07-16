@@ -351,10 +351,19 @@ match. `scripts/check-env.sh` parses the bullets — keep the exact `- owner/rep
 - stantonb/WeddingSite
 - stantonb/ArbBot
 - stantonSB/Agent-Orchestrator
+- Likeness-Market/MarketPlace
 
 *(2026-07-12: fine-grained read-only PAT created and allowlist agreed — all personal
-repos by choice; work repos may be added later. Until then the briefing's GitHub
-section covers exactly these four.)*
+repos by choice; work repos may be added later.)*
+
+*(2026-07-16: `Likeness-Market/MarketPlace` added. A fine-grained PAT has exactly one
+resource owner, so the `stantonb` PAT can never be granted a private repo owned by
+another user/org — cross-owner repos need their own PAT, stored as `GH_PAT_<OWNER>`
+(uppercased, non-alphanumerics → `_`; e.g. `GH_PAT_LIKENESS_MARKET`).
+`scripts/gh-token.sh`'s `gh_token_for owner/repo` resolves the right token per repo;
+check-env and the briefing's GitHub step use it. Until that PAT is created and stored,
+the briefing honestly ⚠️s the repo. `stantonSB/Agent-Orchestrator` needs no override
+only because it is public.)*
 
 *(2026-07-15: on the cloud host, `gh`/API calls via `GH_TOKEN` behave as if scoped to the
 single bound repo (`second-brain`) — a platform-provided credential — so the other three
@@ -417,5 +426,6 @@ back to `GH_TOKEN`.)*
 
 `DISCORD_BOT_TOKEN`, `DISCORD_USER_ID`, `DISCORD_CAPTURE_CHANNEL_ID`,
 `DISCORD_TEST_CHANNEL_ID`, `GH_PAT` (the fine-grained GitHub PAT — `GH_TOKEN` still works
-locally as a fallback), `NOTION_TOKEN` — environment variables only. Never commit,
-print, or log them.
+locally as a fallback), `GH_PAT_<OWNER>` (optional per-owner PATs for cross-owner
+allowlist repos, e.g. `GH_PAT_LIKENESS_MARKET`), `NOTION_TOKEN` — environment variables
+only. Never commit, print, or log them.

@@ -84,9 +84,10 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
 
    - The morning format has **no** Done-today section, so reaction-completed tasks simply
      leave the rolling list — no separate line (evening reports same-day ones).
-   - **Rule #1:** if `dm-channel` or any `reactors` call fails, do **not** abort — finish the
-     run and add `⚠️ couldn't check reminder reactions` at the bottom of the briefing. In
-     `FIXTURE_MODE`, list each completion `set-props` under "Would write:".
+   - **Rule #1:** if the watch-set query, `dm-channel`, or any `reactors` call fails
+     (including a 400 from a schema mismatch — say what broke), do **not** abort — finish
+     the run and add `⚠️ couldn't check reminder reactions — {why}` at the bottom of the
+     briefing. In `FIXTURE_MODE`, list each completion `set-props` under "Would write:".
 2. **121 action-point ingestion** (scheduled run only — skip entirely on an on-demand run,
    and on a rerun where step 0 found the scheduled run ID's Journal page already existed).
    Per `CLAUDE.md → ## 121 action-point ingestion`: walk CSD EL Direct Reports with
@@ -116,9 +117,11 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    `second-brain` and would ⚠️ every other allowlisted repo. If CLAUDE.md's allowlist is
    pending or no GitHub token (`GH_PAT`/`GH_TOKEN`) is set: one line —
    "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration, not an
-   outage. Otherwise, for each allowlisted repo ONLY:
-   - `gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
-   - `gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
+   outage. Otherwise, for each allowlisted repo ONLY — resolving the token per repo,
+   because a repo owned by another user/org needs its own `GH_PAT_<OWNER>` PAT
+   (fine-grained PATs are single-owner; `gh_token_for` picks the right one):
+   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
+   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
    - CI failed overnight = my open PRs with any `statusCheckRollup` conclusion `FAILURE`.
 7. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
    progress`) whose age > 14 days → ⏳ with age in days.
@@ -170,7 +173,9 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
        In `FIXTURE_MODE`, list this `set-props` under "Would write:" instead. If a send
        **fails** (non-zero exit or empty `$MID`), do **not** write a blank id — add
        `⚠️ couldn't send reminder: {name}` at the bottom of the briefing (rule #1) and
-       carry on with the rest.
+       carry on with the rest. If the send succeeded but the id-store `set-props` fails,
+       add `⚠️ couldn't store reminder id: {name}` (rule #1) — the DM went out, but a
+       reaction on it won't be seen until a later reminder stores an id.
 
 ## Never
 
