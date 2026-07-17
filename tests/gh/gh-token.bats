@@ -11,7 +11,7 @@ SCRIPT="$BATS_TEST_DIRNAME/../../scripts/gh-token.sh"
   [ "$output" = "github_pat_mine" ]
 }
 
-@test "with no GH_PAT, GH_TOKEN is left unchanged (local fallback)" {
+@test "with no GH_PAT, a pre-existing GH_TOKEN is left untouched (never clobbered)" {
   run bash -c "unset GH_PAT; export GH_TOKEN='github_pat_local'; source '$SCRIPT'; printf '%s' \"\$GH_TOKEN\""
   [ "$status" -eq 0 ]
   [ "$output" = "github_pat_local" ]

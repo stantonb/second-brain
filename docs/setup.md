@@ -126,9 +126,10 @@ Every line must be ✅ before Stage 1 starts.
 At claude.ai → Claude Code → this repo's cloud environment:
 - Network access: **Custom** → default allowlist **plus `discord.com` and `api.notion.com`**.
 - Environment variables: everything in §4's env file, including any `GH_PAT_<OWNER>`
-  tokens. **Store the GitHub PAT as `GH_PAT`** (not `GH_TOKEN`): the cloud host exposes
-  its own repo-scoped `GH_TOKEN` that sees only the bound repo, so `scripts/gh-token.sh`
-  exports `GH_TOKEN=$GH_PAT` to keep every allowlisted repo visible *(2026-07-15 fix)*.
+  tokens. **Store the GitHub PAT as `GH_PAT` and never set `GH_TOKEN`** *(standardised
+  2026-07-17)*: the cloud host injects its own repo-scoped `GH_TOKEN` at runtime, so a
+  stored one is dead weight at best and shadows the PAT at worst; `scripts/gh-token.sh`
+  derives the effective `GH_TOKEN` from `GH_PAT` *(2026-07-15 fix)*.
   Verify in a cloud session: `./scripts/check-env.sh` should report
   `effective token type: fine-grained PAT` and see every allowlisted repo.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.

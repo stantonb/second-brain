@@ -29,9 +29,9 @@ echo "Env vars:"
 for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID NOTION_TOKEN; do
   if [[ -n "${!var:-}" ]]; then ok "$var is set"; else bad "$var is missing"; fi
 done
-if [[ -n "${GH_PAT:-}" ]]; then ok "GitHub token is set (from GH_PAT)"
-elif [[ -n "${GH_TOKEN:-}" ]]; then ok "GitHub token is set (GH_TOKEN)"
-else bad "GitHub token missing (set GH_PAT to your fine-grained PAT)"; fi
+if [[ -n "${GH_PAT:-}" ]]; then ok "GH_PAT is set"
+elif [[ -n "${GH_TOKEN:-}" ]]; then bad "GH_PAT missing — a bare GH_TOKEN is non-standard (2026-07-17): store the PAT as GH_PAT; never store GH_TOKEN"
+else bad "GH_PAT missing (set it to your fine-grained PAT)"; fi
 
 echo "Discord:"
 if [[ -n "${DISCORD_BOT_TOKEN:-}" ]]; then

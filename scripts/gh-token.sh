@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# gh-token.sh — resolve the effective GitHub token for `gh`/api.github.com calls.
+# gh-token.sh — resolve the effective GitHub token for api.github.com calls.
 #
-# WHY: on the cloud routine host, GitHub access via `GH_TOKEN` behaves as if scoped to the
-# single bound repo (`second-brain`) — the briefing's GitHub section then ⚠️s on the other
-# allowlisted repos, even though our fine-grained PAT can see them all locally. The robust
-# fix is to store the PAT under a name the platform does not set — GH_PAT — and prefer it:
-# exporting GH_TOKEN=$GH_PAT here makes `gh`/curl use our PAT regardless of any
-# platform-injected GH_TOKEN/GITHUB_TOKEN (GH_TOKEN wins gh's precedence). Local runs, where
-# only GH_TOKEN is set, are unaffected (GH_PAT unset → GH_TOKEN left as-is).
+# THE STANDARD (2026-07-17): `GH_PAT` (+ per-owner `GH_PAT_<OWNER>`) are the ONLY GitHub
+# secrets we store — in the local env file and the cloud env alike. `GH_TOKEN` is NEVER
+# stored: the cloud routine host injects its own repo-scoped GH_TOKEN at runtime (it sees
+# only the bound `second-brain` repo and would ⚠️ every other allowlisted repo), so our
+# secret must live under a name the platform does not set. Exporting GH_TOKEN=$GH_PAT here
+# derives the effective token for anything that reads GH_TOKEN, regardless of any
+# platform-injected value. A pre-existing GH_TOKEN with no GH_PAT is left untouched
+# (nothing to prefer) — check-env flags that setup as non-standard.
 #
 # Usage: `. scripts/gh-token.sh` (source) before any GitHub call. Never prints token values.
 
