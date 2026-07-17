@@ -112,17 +112,18 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    first). Everything else gets one line each.
 5. **Email.** From Gmail: inbox messages that need a reply; explicit deadlines spotted;
    waiting-on = my sent mail from the last 7 days with no reply on the thread.
-6. **GitHub.** First `source ./scripts/gh-token.sh` so `gh` authenticates with our PAT
-   (`GH_PAT`); the cloud host otherwise exposes a repo-scoped `GH_TOKEN` that sees only
-   `second-brain` and would ⚠️ every other allowlisted repo. If CLAUDE.md's allowlist is
-   pending or no GitHub token (`GH_PAT`/`GH_TOKEN`) is set: one line —
-   "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration, not an
-   outage. Otherwise, for each allowlisted repo ONLY — resolving the token per repo,
-   because a repo owned by another user/org needs its own `GH_PAT_<OWNER>` PAT
-   (fine-grained PATs are single-owner; `gh_token_for` picks the right one):
-   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --search "review-requested:@me" --state open --json number,title,url`
-   - `GH_TOKEN=$(gh_token_for "$REPO") gh pr list --repo "$REPO" --author "@me" --state open --json number,title,url,reviewDecision,statusCheckRollup`
-   - CI failed overnight = my open PRs with any `statusCheckRollup` conclusion `FAILURE`.
+6. **GitHub.** Never use the `gh` CLI — the cloud host doesn't reliably provide it
+   (2026-07-17 run: absent). All PR/CI reads go through `./scripts/gh-prs.sh` (curl +
+   REST), which resolves the token per repo via `gh-token.sh` — `GH_PAT`, or
+   `GH_PAT_<OWNER>` for repos owned by another user/org (fine-grained PATs are
+   single-owner). If CLAUDE.md's allowlist is pending or `GH_PAT` is not set: one
+   line — "⚠️ GitHub: pending (allowlist/PAT not configured)" — this is configuration,
+   not an outage. Otherwise, for each allowlisted repo ONLY:
+   - `./scripts/gh-prs.sh prs "$REPO"` → `{repo, needs_review: [{number,title,url}], mine: [{number,title,url,ci}]}`.
+   - "Needs your review" = `needs_review`; "Yours" = `mine` (mention each PR's `ci`
+     state); "CI failed overnight" = `mine` entries with `ci == "failure"`.
+   - A repo whose read fails (e.g. its per-owner PAT isn't created yet) → one ⚠️ line
+     naming the repo(s) and why; the reachable repos still report normally (rule #1).
 7. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
    progress`) whose age > 14 days → ⏳ with age in days.
 8. **Decisions needed.** Capture Log rows with Outcome `Needs Review` that are still

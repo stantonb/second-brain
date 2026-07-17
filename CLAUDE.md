@@ -369,8 +369,13 @@ only because it is public.)*
 single bound repo (`second-brain`) — a platform-provided credential — so the other three
 repos ⚠️'d. Fix: the PAT is stored as **`GH_PAT`** and `scripts/gh-token.sh` (sourced by
 `check-env.sh` and the morning skill's GitHub step) exports `GH_TOKEN=$GH_PAT` so our PAT
-always wins. Locally, where only `GH_TOKEN` is set, nothing changes — `GH_PAT` unset falls
-back to `GH_TOKEN`.)*
+always wins.)*
+
+*(2026-07-17: two hardenings. **No `gh` CLI dependency** — the cloud host doesn't reliably
+provide it (that morning's run: absent), so all PR/CI reads go through `scripts/gh-prs.sh`
+(curl + REST, per-repo token via `gh_token_for`). **Token standardisation** — `GH_PAT` and
+`GH_PAT_<OWNER>` are the only stored GitHub secrets, local and cloud; never store
+`GH_TOKEN` anywhere — see `## Secrets`.)*
 
 ## Discord
 
@@ -425,7 +430,9 @@ back to `GH_TOKEN`.)*
 ## Secrets
 
 `DISCORD_BOT_TOKEN`, `DISCORD_USER_ID`, `DISCORD_CAPTURE_CHANNEL_ID`,
-`DISCORD_TEST_CHANNEL_ID`, `GH_PAT` (the fine-grained GitHub PAT — `GH_TOKEN` still works
-locally as a fallback), `GH_PAT_<OWNER>` (optional per-owner PATs for cross-owner
-allowlist repos, e.g. `GH_PAT_LIKENESS_MARKET`), `NOTION_TOKEN` — environment variables
-only. Never commit, print, or log them.
+`DISCORD_TEST_CHANNEL_ID`, `GH_PAT` (the fine-grained GitHub PAT — the **only** stored
+GitHub secret, standardised 2026-07-17), `GH_PAT_<OWNER>` (optional per-owner PATs for
+cross-owner allowlist repos, e.g. `GH_PAT_LIKENESS_MARKET`), `NOTION_TOKEN` — environment
+variables only. Never commit, print, or log them. `GH_TOKEN` is **never stored** (locally
+or in the cloud env): the cloud host injects its own repo-scoped `GH_TOKEN` at runtime,
+and `scripts/gh-token.sh` derives the effective one from `GH_PAT`.
