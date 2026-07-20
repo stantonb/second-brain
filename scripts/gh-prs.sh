@@ -22,20 +22,30 @@ API_BASE="${GITHUB_API_BASE:-https://api.github.com}"
 
 source "$(dirname "$0")/gh-token.sh"
 
-# gh_api TOKEN PATH — prints the response body; non-2xx → message on stderr, rc 1.
+# gh_api TOKEN PATH — prints the response body; non-2xx → diagnostic line on stderr,
+# rc 1. The diagnostic carries GitHub's error message, the token's format kind, and
+# whether an x-github-request-id header came back (a real-GitHub response always has
+# one; an intermediary's synthetic response usually doesn't) — never the token itself.
+# GitHub's message text is the discriminator the 2026-07-17..20 403s were missing:
+# "…not accessible by integration" = a platform app token was evaluated, not our PAT.
 gh_api() {
-  local token=$1 path=$2 resp code body
-  resp=$(curl -sS -w $'\n%{http_code}' \
+  local token=$1 path=$2 hdrs resp code body msg reqid=absent
+  hdrs=$(mktemp)
+  resp=$(curl -sS -D "$hdrs" -w $'\n%{http_code}' \
     -H "Authorization: Bearer $token" \
     -H 'Accept: application/vnd.github+json' \
     "$API_BASE$path")
   code=${resp##*$'\n'}
   body=${resp%$'\n'*}
   if [[ $code == 2* ]]; then
+    rm -f "$hdrs"
     printf '%s' "$body"
     return 0
   fi
-  echo "gh_api: GET $path → HTTP $code" >&2
+  grep -qi '^x-github-request-id:' "$hdrs" && reqid=present
+  rm -f "$hdrs"
+  msg=$(jq -r '.message? // empty' <<<"$body" 2>/dev/null)
+  echo "gh_api: GET $path → HTTP $code (${msg:-no message}; token: $(gh_token_kind "$token"); github-request-id: $reqid)" >&2
   return 1
 }
 
@@ -43,6 +53,10 @@ gh_api() {
 prs() {
   local repo=$1 user=${2:-} token pulls mine_shas sha runs ci
   token=$(gh_token_for "$repo")
+  if [[ -z $token ]]; then
+    echo "gh-prs: no GH_PAT (or GH_PAT_<OWNER> override) set for $repo — refusing to fall back to a platform-injected GH_TOKEN; GitHub reads use our PAT only" >&2
+    return 1
+  fi
   if [[ -z $user ]]; then
     user=$(gh_api "$token" "/user" | jq -r '.login') || return 1
   fi

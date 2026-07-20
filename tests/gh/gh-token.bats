@@ -41,8 +41,21 @@ SCRIPT="$BATS_TEST_DIRNAME/../../scripts/gh-token.sh"
   [ "$output" = "github_pat_org" ]
 }
 
-@test "gh_token_for falls back to the effective GH_TOKEN when no per-owner override exists" {
-  run bash -c "unset GH_PAT; export GH_TOKEN='github_pat_default'; source '$SCRIPT'; gh_token_for 'stantonb/second-brain'"
-  [ "$status" -eq 0 ]
-  [ "$output" = "github_pat_default" ]
+# &&-chained assertions: this machine's bats (bash 3.2) only registers the final
+# command's status, so independent assertion lines can false-pass.
+@test "gh_token_for falls back to GH_PAT when no per-owner override exists" {
+  run bash -c "export GH_PAT='github_pat_mine' GH_TOKEN='ghs_platform'; source '$SCRIPT'; gh_token_for 'stantonb/second-brain'"
+  [ "$status" -eq 0 ] && [ "$output" = "github_pat_mine" ]
+}
+
+@test "gh_token_for never returns a platform GH_TOKEN (empty when no PAT is set)" {
+  run bash -c "unset GH_PAT; export GH_TOKEN='ghs_platform'; source '$SCRIPT'; gh_token_for 'stantonb/second-brain'"
+  [ "$status" -eq 0 ] && [ "$output" = "" ]
+}
+
+@test "gh_token_kind labels an explicit token argument without printing it" {
+  run bash -c "unset GH_PAT GH_TOKEN; source '$SCRIPT'; gh_token_kind 'ghs_installationSECRET'"
+  [ "$status" -eq 0 ] &&
+    [[ "$output" == *"installation"* ]] &&
+    [[ "$output" != *"SECRET"* ]]
 }

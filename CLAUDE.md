@@ -377,6 +377,19 @@ provide it (that morning's run: absent), so all PR/CI reads go through `scripts/
 `GH_PAT_<OWNER>` are the only stored GitHub secrets, local and cloud; never store
 `GH_TOKEN` anywhere — see `## Secrets`.)*
 
+*(2026-07-20: **the single GitHub approach**, from systematic debugging of the
+2026-07-17..20 all-repos-403s — which the local PAT, verified healthy against every
+allowlisted repo, cannot produce; only the cloud host's own GitHub credential layer can.
+One path everywhere: `scripts/gh-prs.sh` with the token from `gh_token_for` — `GH_PAT` or
+per-owner `GH_PAT_<OWNER>`, **never** the platform-injected `GH_TOKEN`. `gh_token_for` no
+longer falls back to it: no PAT → the read fails loudly instead of silently running with
+platform scope. Failures are self-diagnosing — gh-prs' stderr line carries the HTTP code,
+GitHub's error message ("Resource not accessible by **integration**" = a platform app
+token was evaluated, not our PAT), the token kind, and whether GitHub's request id was
+present (absent = an intermediary answered, not GitHub). Briefings quote that line in
+their ⚠️. `check-env.sh` prints GH_PAT's sha256-12 fingerprint — run it locally and in a
+cloud session; a mismatch means the cloud secret is a different token.)*
+
 ## Discord
 
 - All Discord I/O goes through `scripts/discord.sh` (429/Retry-After, 2000-char splits).

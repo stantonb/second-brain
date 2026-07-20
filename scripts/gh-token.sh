@@ -18,21 +18,24 @@ fi
 
 # gh_token_for OWNER/REPO — print the token to use for GitHub calls against this repo:
 # a per-owner override GH_PAT_<OWNER> (owner uppercased, non-alphanumerics → _) if set,
-# else the effective GH_TOKEN. A fine-grained PAT has exactly ONE resource owner, so a
-# repo owned by another user/org (e.g. Likeness-Market/MarketPlace) can never be granted
-# on the stantonb PAT — it needs its own PAT, stored e.g. as GH_PAT_LIKENESS_MARKET.
-# Usage: GH_TOKEN=$(gh_token_for "$repo") gh pr list --repo "$repo" ...
+# else GH_PAT. NEVER the platform-injected GH_TOKEN (2026-07-20): four days of cloud
+# runs proved a silently-substituted platform token yields platform scope, not ours,
+# and the resulting 403s were undiagnosable. No PAT → empty output → callers fail loud.
+# A fine-grained PAT has exactly ONE resource owner, so a repo owned by another
+# user/org (e.g. Likeness-Market/MarketPlace) can never be granted on the stantonb
+# PAT — it needs its own PAT, stored e.g. as GH_PAT_LIKENESS_MARKET.
+# Usage: token=$(gh_token_for "$repo"); curl -H "Authorization: Bearer $token" ...
 gh_token_for() {
   local owner=${1%%/*} var
   var="GH_PAT_$(printf '%s' "$owner" | tr '[:lower:]' '[:upper:]' | tr -c 'A-Z0-9' '_')"
-  printf '%s' "${!var:-${GH_TOKEN:-}}"
+  printf '%s' "${!var:-${GH_PAT:-}}"
 }
 
-# gh_token_kind — echo a secret-safe label for the effective GH_TOKEN's type, derived from
-# its public format prefix only (never the value). Lets check-env/diagnostics show whether
-# the effective token is our PAT or a platform installation token, without leaking it.
+# gh_token_kind [TOKEN] — echo a secret-safe label for the token's type (defaults to the
+# effective GH_TOKEN), derived from its public format prefix only (never the value). Lets
+# check-env/diagnostics show whether a token is our PAT or a platform installation token.
 gh_token_kind() {
-  case "${GH_TOKEN:-}" in
+  case "${1:-${GH_TOKEN:-}}" in
     github_pat_*) echo "fine-grained PAT" ;;
     ghp_*)        echo "classic PAT" ;;
     ghs_*)        echo "installation/app token (platform-injected?)" ;;

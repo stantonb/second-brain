@@ -132,6 +132,12 @@ At claude.ai → Claude Code → this repo's cloud environment:
   derives the effective `GH_TOKEN` from `GH_PAT` *(2026-07-15 fix)*.
   Verify in a cloud session: `./scripts/check-env.sh` should report
   `effective token type: fine-grained PAT` and see every allowlisted repo.
+  **Fingerprint check** *(2026-07-20)*: check-env prints `GH_PAT sha256-12 fingerprint:
+  <12 hex chars>` — run it locally AND in a cloud session and compare. A mismatch means
+  the cloud secret holds a different token (e.g. an old or wrong PAT was pasted); re-paste
+  the working local PAT. Note the scripts never fall back to the cloud host's own
+  `GH_TOKEN` — a missing `GH_PAT` fails loudly rather than silently running with the
+  platform's repo scope.
 - Connectors enabled for routines: **Notion, Gmail, Google Calendar only** — remove all others.
 Exact steps live in the Stage 3 plan.
 

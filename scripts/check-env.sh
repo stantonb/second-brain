@@ -29,7 +29,10 @@ echo "Env vars:"
 for var in DISCORD_BOT_TOKEN DISCORD_USER_ID DISCORD_CAPTURE_CHANNEL_ID DISCORD_TEST_CHANNEL_ID NOTION_TOKEN; do
   if [[ -n "${!var:-}" ]]; then ok "$var is set"; else bad "$var is missing"; fi
 done
-if [[ -n "${GH_PAT:-}" ]]; then ok "GH_PAT is set"
+if [[ -n "${GH_PAT:-}" ]]; then
+  ok "GH_PAT is set"
+  fp=$(printf '%s' "$GH_PAT" | { command -v sha256sum >/dev/null && sha256sum || shasum -a 256; } | cut -c1-12)
+  note "GH_PAT sha256-12 fingerprint: $fp — run this in every environment; a mismatch means the cloud secret is a different token"
 elif [[ -n "${GH_TOKEN:-}" ]]; then bad "GH_PAT missing — a bare GH_TOKEN is non-standard (2026-07-17): store the PAT as GH_PAT; never store GH_TOKEN"
 else bad "GH_PAT missing (set it to your fine-grained PAT)"; fi
 
@@ -68,13 +71,24 @@ if [[ -n "${GH_TOKEN:-}" ]]; then
       note "no allowlist entries in CLAUDE.md yet"
     else
       while IFS= read -r repo; do
-        code=$(curl -s -o /dev/null -w '%{http_code}' \
-          -H "Authorization: Bearer $(gh_token_for "$repo")" "https://api.github.com/repos/$repo")
-        if [[ $code == 200 ]]; then
-          ok "PAT can see $repo"
-        else
-          bad "PAT cannot see $repo (→ $code — grant it on the PAT; a repo owned by another user/org needs its own GH_PAT_<OWNER> token)"
+        tok=$(gh_token_for "$repo")
+        if [[ -z $tok ]]; then
+          bad "no token for $repo (GH_PAT unset and no GH_PAT_<OWNER> override — the platform GH_TOKEN is never used)"
+          continue
         fi
+        # Probe the pulls endpoint the briefing actually reads — a metadata-only 200
+        # can hide a missing "Pull requests: read" permission.
+        rbody=$(mktemp)
+        code=$(curl -s -o "$rbody" -w '%{http_code}' \
+          -H "Authorization: Bearer $tok" "https://api.github.com/repos/$repo/pulls?state=open&per_page=1")
+        if [[ $code == 200 ]]; then
+          ok "PAT can read $repo pulls"
+        else
+          msg=''
+          command -v jq >/dev/null && msg=$(jq -r '.message? // empty' "$rbody" 2>/dev/null)
+          bad "PAT cannot read $repo pulls (→ $code${msg:+ — \"$msg\"}; token: $(gh_token_kind "$tok") — grant the PAT this repo + Pull requests: read; a repo owned by another user/org needs its own GH_PAT_<OWNER> token)"
+        fi
+        rm -f "$rbody"
       done <<< "$repos"
     fi
   else

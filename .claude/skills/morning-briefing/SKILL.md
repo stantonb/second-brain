@@ -123,7 +123,11 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    - "Needs your review" = `needs_review`; "Yours" = `mine` (mention each PR's `ci`
      state); "CI failed overnight" = `mine` entries with `ci == "failure"`.
    - A repo whose read fails (e.g. its per-owner PAT isn't created yet) → one ⚠️ line
-     naming the repo(s) and why; the reachable repos still report normally (rule #1).
+     naming the repo(s) and **quoting gh-prs' stderr diagnostic** — it carries the HTTP
+     code, GitHub's error message, the token kind, and whether GitHub's request id was
+     present ("Resource not accessible by integration" = a platform app token was
+     evaluated, not our PAT; request-id absent = an intermediary answered, not GitHub).
+     The reachable repos still report normally (rule #1).
 7. **Aging flags.** Rolling-list tasks (unpinned, unsnoozed, Status `Next`/`In
    progress`) whose age > 14 days → ⏳ with age in days.
 8. **Decisions needed.** Capture Log rows with Outcome `Needs Review` that are still

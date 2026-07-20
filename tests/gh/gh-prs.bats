@@ -82,6 +82,39 @@ EOF
   [ "$status" -ne 0 ]
 }
 
+# Assertions are &&-chained: this machine's bats (bash 3.2) only registers the final
+# command's status, so independent assertion lines can false-pass. Chaining is safe
+# under both behaviours.
+@test "prs refuses to run without a PAT; the platform GH_TOKEN is never sent" {
+  unset GH_PAT
+  export GH_TOKEN='ghs_platforminjected'
+  run "$SCRIPT" prs stantonb/second-brain stantonb
+  [ "$status" -ne 0 ] &&
+    [[ "$output" == *"GH_PAT"* ]] &&
+    [ ! -f "$CURL_STUB_DIR/calls.log" ]
+}
+
+@test "gh_api failures name the HTTP code, the GitHub error message, and the token kind" {
+  echo 403 > "$CURL_STUB_DIR/1.code"
+  printf '{"message":"Resource not accessible by integration"}' > "$CURL_STUB_DIR/1.body"
+  run "$SCRIPT" prs stantonb/second-brain stantonb
+  [ "$status" -ne 0 ] &&
+    [[ "$output" == *"HTTP 403"* ]] &&
+    [[ "$output" == *"Resource not accessible by integration"* ]] &&
+    [[ "$output" == *"fine-grained PAT"* ]] &&
+    [[ "$output" == *"github-request-id: absent"* ]] &&
+    [[ "$output" != *"github_pat_default"* ]]
+}
+
+@test "gh_api failures report a GitHub request id when one was returned" {
+  echo 403 > "$CURL_STUB_DIR/1.code"
+  printf '{"message":"boom"}' > "$CURL_STUB_DIR/1.body"
+  printf 'x-github-request-id: ABCD:1234\r\n' > "$CURL_STUB_DIR/1.headers"
+  run "$SCRIPT" prs stantonb/second-brain stantonb
+  [ "$status" -ne 0 ] &&
+    [[ "$output" == *"github-request-id: present"* ]]
+}
+
 @test "prs resolves the username via /user when not given, and reports pending CI" {
   # call order: 1=/user, 2=pulls, 3=check-runs
   printf '{"login": "stantonb"}' > "$CURL_STUB_DIR/1.body"
