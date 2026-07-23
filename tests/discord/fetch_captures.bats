@@ -10,13 +10,13 @@ teardown() { teardown_discord; }
   cp "$FIX/captures-empty.json"  "$CURL_STUB_DIR/3.body"; echo 200 > "$CURL_STUB_DIR/3.code"
   run fetch_captures 555 0
   [ "$status" -eq 0 ]
-  [ "$(jq 'length' <<<"$output")" = "3" ]
+  [ "$(jq 'length' <<<"$output")" = "4" ]
   [ "$(jq -r '.[0].id' <<<"$output")" = "1391402271633244160" ]
-  [ "$(jq -r '.[2].id' <<<"$output")" = "1391402271633244162" ]
+  [ "$(jq -r '.[3].id' <<<"$output")" = "1391402271633244163" ]
   # cursor advanced to the newest id of each page
   [ "$(sed -n '1p' "$CURL_STUB_DIR/calls.log" | grep -c 'after=0')" = "1" ]
   [ "$(sed -n '2p' "$CURL_STUB_DIR/calls.log" | grep -c 'after=1391402271633244161')" = "1" ]
-  [ "$(sed -n '3p' "$CURL_STUB_DIR/calls.log" | grep -c 'after=1391402271633244162')" = "1" ]
+  [ "$(sed -n '3p' "$CURL_STUB_DIR/calls.log" | grep -c 'after=1391402271633244163')" = "1" ]
 }
 
 @test "empty channel yields an empty JSON array" {
