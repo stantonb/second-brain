@@ -95,12 +95,42 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    `Action Items`/`Follow-ups` sections (skip a report's own actions; strip the
    `Stanton —` prefix and any `(carried over)` marker), and `./scripts/notion.sh create`
    a deduped `Inbox`/`Work` Task per **new** action (`Source ID` `121:{person}#{bullet-key}`,
-   content-based, dedupe by querying Tasks for `Source ID starts_with "121:"`). Collect the
-   newly-created actions for the
+   content-based, dedupe by querying Tasks for `Source ID starts_with "121:"`; `Due` = a
+   stated deadline anchored to the page date, else the run date + 7 — the default-due
+   rule). Collect the newly-created actions for the
    `🗂 New from 1:1s` section (step 9's compose). On **any** read failure: create nothing,
    add `⚠️ couldn't reach CSD EL 1:1 notes` (rule #1). In `FIXTURE_MODE` read the walk,
    page blocks, and existing Source IDs from the fixtures (`tests/fixtures/README.md`
    mapping) and list each `create` under "Would write:".
+2b. **Default-due sweep** (scheduled run only — skip entirely on an on-demand run;
+   safe on a rerun, which finds nothing left dateless). Per `CLAUDE.md → ## Task
+   schema → ### Default due date`: one `notion.sh query` on the Tasks data source for
+   dateless open tasks —
+
+   ```json
+   {"and":[
+     {"property":"Status","select":{"does_not_equal":"Done"}},
+     {"property":"Status","select":{"does_not_equal":"Dropped"}},
+     {"property":"Due","date":{"is_empty":true}}
+   ]}
+   ```
+
+   For each result (snoozed tasks included — a date must be waiting when they wake):
+   `DUE=$(TZ=Europe/London date -v+7d +%F)` (`date -d '+7 days' +%F` on Linux cloud
+   runs), then `./scripts/notion.sh set-props <page-id>` with
+
+   ```json
+   {"Due":{"date":{"start":"$DUE"}}}
+   ```
+
+   **Never update `Last Touched`** — a datestamp is not a touch; aging must stay
+   honest. Collect the stamped names + dates for the `📆 Defaulted due` section (step
+   9's compose; omit the section when the sweep stamped nothing). This step runs
+   before step 4 so the rolling list shows the fresh dates. In `FIXTURE_MODE` the
+   query reads `tests/fixtures/notion/tasks.json` (rows with `"due": null`) and each
+   `set-props` is listed under "Would write:". **Rule #1:** on a query or write
+   failure don't abort — stamp what you can and add `⚠️ couldn't default due dates`
+   at the bottom of the briefing; the next morning's sweep catches the rest.
 3. **Calendar.** Today's events from every connected Google Calendar (personal account;
    plus the shared work calendar if that fallback is live). List chronologically with
    times; note gaps ≥ 45 min between 09:00–18:00. For work meetings, context may be
