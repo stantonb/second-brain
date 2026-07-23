@@ -13,6 +13,7 @@ Mapping used by skills in fixture mode:
 |---|---|
 | `discord.sh fetch-captures` | `discord/captures-page-1.json` + `discord/captures-page-2.json` (concatenated, oldest first) |
 | Notion Tasks DB rolling-list query | `notion/tasks.json` |
+| Default-due sweep query (dateless open tasks) | `notion/tasks.json` (rows with `"due": null`) |
 | GitHub `gh pr list` per allowlist repo | `github/prs.json` |
 | Google Calendar (today) | `google/calendar-today.json` (from Stage 3) |
 | Gmail triage | `google/gmail.json` (from Stage 3) |
