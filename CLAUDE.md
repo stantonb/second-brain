@@ -127,6 +127,25 @@ evening run — never parsed back out of Journal prose.
 - **> 30 days** → weekly review proposes `Dropped`; Stanton confirms via a `drop:` capture.
 - **Pinned** tasks are exempt from both; **snoozed** tasks don't age until they wake.
 
+### Default due date *(2026-07-23)*
+
+No brain-created task is left dateless — a task with no `Due` never fires an individual
+reminder DM, so dateless tasks sat on the rolling list indefinitely. A stated or
+inferable date always wins; the default **never overwrites** an existing `Due`.
+
+- **Captures** (rules 4 and 7): `Due` = the capture message's **timestamp date + 7 days**
+  (Europe/London — the same anchor as relative dates; late triage must not shift it).
+- **121 ingestion**: no stated deadline → `Due` = the **ingestion run date + 7 days** —
+  not the 121 page's date, so a carried-over action from an old page never lands
+  pre-overdue. The page date still anchors *stated* deadlines, unchanged.
+- **Sweep (backstop)**: the **scheduled** morning run (never on-demand) stamps
+  `Due = TODAY + 7` on every open task (Status ∉ {Done, Dropped}, snoozed included)
+  whose `Due` is empty — this catches tasks added by hand in Notion. It never updates
+  `Last Touched`, and it is idempotent (a rerun finds nothing dateless). Stamped tasks
+  are surfaced in that briefing's `📆 Defaulted due` section; on any sweep failure the
+  briefing carries `⚠️ couldn't default due dates` (rule #1) and the next morning's
+  sweep catches what was missed.
+
 ## Triage intent rules
 
 Apply to each unprocessed `#capture` message, first match wins:
@@ -142,13 +161,17 @@ Apply to each unprocessed `#capture` message, first match wins:
    auto-apply and report it in the next DM; otherwise `Needs Review`. Completed = the
    capture's date, not the processing date.
 3. `snooze: <task> until <date>` → set Snoozed Until (date parsed in Europe/London).
-4. `waiting: <person> <thing>` → Task with Status `Waiting`, Waiting-on = person.
+4. `waiting: <person> <thing>` → Task with Status `Waiting`, Waiting-on = person. No
+   stated or inferable due date → `Due` = capture date + 7 (the default-due rule) — the
+   eventual reminder doubles as a chase-up nudge.
 5. `meeting: <text>` → reserved for Phase 2; until then treat as a Journal note and say
    so in the next briefing.
 6. Bare URL (optional trailing comment) → Reading list row (Name = comment or page
    title, Status `Unread`).
 7. Anything actionable → Task: infer Domain, Due, Priority; Status `Inbox`, promoted to
-   `Next` if clearly actionable now. Source = `Discord capture`, Source ID = message ID.
+   `Next` if clearly actionable now. No due date stated or inferable → `Due` = the
+   capture's date + 7 (the default-due rule). Source = `Discord capture`,
+   Source ID = message ID.
 8. Anything else → note appended to today's Journal page.
 
 **Multi-intent messages** (agreed 2026-07-08): a message made of multiple lines or
@@ -212,9 +235,10 @@ writes, appends to, or marks CSD EL** — dedupe lives entirely in Tasks (Source
   - `Domain` = `Work`; `Status` = `Inbox`; `Priority` = left blank.
   - `Project/Area` = the direct report's name (the `{person}` folder; the select option is
     created on first write).
-  - `Due` = set **only** if the action states a deadline, resolved from the **121 page's
-    own date** (parsed from its `DDMMYYYY` title), Europe/London — e.g. "by Friday" on a
-    `07072026` page → `2026-07-10`. No stated deadline → `Due` blank.
+  - `Due` = a stated deadline, resolved from the **121 page's own date** (parsed from
+    its `DDMMYYYY` title), Europe/London — e.g. "by Friday" on a `07072026` page →
+    `2026-07-10`. No stated deadline → `Due` = the ingestion run date + 7 days (the
+    default-due rule, 2026-07-23).
   - `Source` = `1:1 with {person}, {D Mon YYYY}` (the page's date).
   - `Source ID` = `121:{person}#{bullet-key}` (below).
 - **bullet-key (stable, content-based dedupe).** `{bullet-key}` = the first 12 hex chars of
@@ -294,6 +318,9 @@ Unprefixed events: include.
 
 **🗂 New from 1:1s**   (ingested action points — triage into the rolling list)
 - {task} — 1:1 with {person} ({DD Mon})
+
+**📆 Defaulted due**   (dateless tasks stamped +7d)
+- {task} → due {Ddd D Mon}
 
 **❓ Decisions needed**
 - "{raw capture}" — reply `done: …` / `drop: …` / tell me what it is
