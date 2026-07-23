@@ -354,7 +354,7 @@ git commit -m "test(fixtures): dateless capture + sweep mapping; bats tracks 4th
 
 ### Task 4: One-off staggered backfill (live migration — run once)
 
-**Sequencing constraint (from the spec):** run after Tasks 1–3 are approved, and **before the next scheduled 06:45 morning run** — otherwise the new sweep stamps the whole backlog `TODAY + 7` un-staggered and it all fires on the same day. No repo change; nothing to commit.
+**Sequencing constraint (from the spec) — read carefully, this is the one thing most likely to go wrong.** The sweep (step 2b) is code-independent of this backfill: the moment step 2b can execute in production, the *first* scheduled morning run stamps every dateless open task with a single `TODAY + 7`, so they all fire ⏰ DMs on the same morning — defeating the whole point of the random(1–14) stagger. Approval ≠ merge ≠ deploy: this backfill must complete **before the sweep can first execute in production**. Because it depends on nothing in the diff, the safest order is to **run it before merging** (or in the same session immediately after), then confirm Step 4's invariant (no dateless open task remains) before the next scheduled 06:45 run. Call this out in the PR description so the operator cannot miss it. No repo change; nothing to commit.
 
 **Files:** none (live Notion mutation via `scripts/notion.sh`).
 

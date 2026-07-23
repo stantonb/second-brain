@@ -103,7 +103,7 @@ Europe/London rule all bind this run. Rule #1: never fail silent.
    page blocks, and existing Source IDs from the fixtures (`tests/fixtures/README.md`
    mapping) and list each `create` under "Would write:".
 2b. **Default-due sweep** (scheduled run only — skip entirely on an on-demand run;
-   safe on a rerun, which finds nothing left dateless). Per `CLAUDE.md → ## Task
+   safe on a rerun — unlike 121 ingestion and reminders it need not gate on the rerun check, because it is idempotent by construction and finds nothing left dateless). Per `CLAUDE.md → ## Task
    schema → ### Default due date`: one `notion.sh query` on the Tasks data source for
    dateless open tasks —
 
